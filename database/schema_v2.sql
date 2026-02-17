@@ -1,0 +1,102 @@
+-- ====================================================
+-- CropShield Database V2 - Advanced Schema
+-- ====================================================
+
+CREATE DATABASE IF NOT EXISTS cropshield_db_v2;
+USE cropshield_db_v2;
+
+-- USER TABLE
+CREATE TABLE IF NOT EXISTS User (
+  UserID VARCHAR(50) PRIMARY KEY,
+  UserName VARCHAR(100) NOT NULL,
+  Email VARCHAR(150) NOT NULL UNIQUE,
+  Password VARCHAR(150) NOT NULL,
+  Region VARCHAR(100),
+  UserRole VARCHAR(50) NOT NULL,
+  IsVerified BOOLEAN DEFAULT FALSE,
+  VerificationToken VARCHAR(100),
+  CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- IMAGE TABLE
+CREATE TABLE IF NOT EXISTS Image (
+  ImageID VARCHAR(50) PRIMARY KEY,
+  UserID VARCHAR(50) NOT NULL,
+  ImagePath VARCHAR(255) NOT NULL,
+  UploadDate DATETIME NOT NULL,
+  FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- DETECTION_MODEL TABLE
+CREATE TABLE IF NOT EXISTS DetectionModel (
+  ModelID VARCHAR(50) PRIMARY KEY,
+  ModelName VARCHAR(100) NOT NULL,
+  Accuracy FLOAT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- DISEASE TABLE
+CREATE TABLE IF NOT EXISTS Disease (
+  DiseaseID VARCHAR(50) PRIMARY KEY,
+  DiseaseName VARCHAR(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- DETECTION TABLE
+CREATE TABLE IF NOT EXISTS Detection (
+  DetectionID VARCHAR(50) PRIMARY KEY,
+  ImageID VARCHAR(50) NOT NULL,
+  ModelID VARCHAR(50) NOT NULL,
+  DetectionDate DATETIME NOT NULL,
+  FOREIGN KEY (ImageID) REFERENCES Image(ImageID) ON DELETE CASCADE,
+  FOREIGN KEY (ModelID) REFERENCES DetectionModel(ModelID) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- DETECTION_DISEASE TABLE
+CREATE TABLE IF NOT EXISTS Detection_Disease (
+  DetectionID VARCHAR(50) NOT NULL,
+  DiseaseID VARCHAR(50) NOT NULL,
+  PRIMARY KEY (DetectionID, DiseaseID),
+  FOREIGN KEY (DetectionID) REFERENCES Detection(DetectionID) ON DELETE CASCADE,
+  FOREIGN KEY (DiseaseID) REFERENCES Disease(DiseaseID) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ANALYSIS TABLE
+CREATE TABLE IF NOT EXISTS Analysis (
+  AnalysisID VARCHAR(50) PRIMARY KEY,
+  DetectionID VARCHAR(50) NOT NULL,
+  AnalysisDate DATETIME NOT NULL,
+  Summary VARCHAR(255),
+  FOREIGN KEY (DetectionID) REFERENCES Detection(DetectionID) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- FEEDBACK TABLE
+CREATE TABLE IF NOT EXISTS Feedback (
+  FeedbackID VARCHAR(50) PRIMARY KEY,
+  UserID VARCHAR(50) NOT NULL,
+  Comments VARCHAR(255) NOT NULL,
+  FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- EMAIL VERIFICATIONS TABLE (for email verification tokens)
+CREATE TABLE IF NOT EXISTS EmailVerifications (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(150) NOT NULL,
+  token VARCHAR(255) DEFAULT NULL,
+  expires_at DATETIME NOT NULL,
+  is_verified TINYINT(1) NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_email (email),
+  INDEX idx_expires_at (expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Seed initial data for models and diseases
+INSERT IGNORE INTO DetectionModel (ModelID, ModelName, Accuracy) VALUES 
+('model-001', 'RiceLeaf-CNN-v1', 0.92),
+('model-002', 'RiceLeaf-ResNet50', 0.95);
+
+INSERT IGNORE INTO Disease (DiseaseID, DiseaseName) VALUES 
+('dis-001', 'Rice Blast'),
+('dis-002', 'Bacterial Leaf Blight'),
+('dis-003', 'Brown Spot'),
+('dis-004', 'Leaf Scald'),
+('dis-005', 'Sheath Blight'),
+('dis-006', 'Healthy');
