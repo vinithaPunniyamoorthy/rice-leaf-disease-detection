@@ -111,7 +111,13 @@ exports.verifyEmail = async (req, res) => {
 
     try {
         if (!token) {
-            return res.status(400).send('<h1 style="color: red; text-align: center;">Token missing</h1>');
+            return res.status(400).send(`
+                <div style="text-align: center; margin-top: 50px; font-family: 'Segoe UI', Arial, sans-serif; background-color: #fef2f2; padding: 40px; border-radius: 12px; max-width: 500px; margin-left: auto; margin-right: auto; border: 1px solid #fca5a5;">
+                    <h1 style="color: #991b1b; font-size: 28px;">❌ Token Missing</h1>
+                    <p style="color: #7f1d1d; font-size: 16px;">The verification link is invalid or incomplete.</p>
+                    <p style="color: #475569; font-size: 14px;">Please click the full link from your verification email, or request a new verification email from the app.</p>
+                </div>
+            `);
         }
 
         const hashedToken = hashToken(token);
