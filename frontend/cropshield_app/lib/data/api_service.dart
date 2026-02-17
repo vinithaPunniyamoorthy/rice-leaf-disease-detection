@@ -2,13 +2,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  // CONNECTION SETTINGS FOR GALAXY A12:
-  // Option A (Recommended): Replace '127.0.0.1' with your Computer's Real IP (e.g. 192.168.1.5)
-  // Option B: Keep '127.0.0.1' and run 'adb reverse tcp:5000 tcp:5000' in your terminal.
-  static const String backendIp = '127.0.0.1';
+  // Railway deployed backend URL
+  static const String backendUrl =
+      'https://rice-leaf-disease-detection-production.up.railway.app';
 
   static String get baseUrl {
-    return 'http://$backendIp:5000/api';
+    return '$backendUrl/api';
   }
 
   // Auth APIs
