@@ -53,15 +53,17 @@ async function reconcile() {
         await ensureTablePlural('Admin', 'admins');
 
         // 2. Standardize users
-        await ensureCol('users', 'UserID', 'id', 'VARCHAR(50)');
-        await ensureCol('users', 'UserName', 'username', 'VARCHAR(100)');
-        await ensureCol('users', 'UserRole', 'role', 'VARCHAR(50)');
-        await ensureCol('users', 'IsVerified', 'is_verified', 'TINYINT(1) DEFAULT 0');
-        await ensureCol('users', null, 'name', 'VARCHAR(255) AFTER id');
-        await ensureCol('users', null, 'is_approved', 'BOOLEAN DEFAULT TRUE AFTER role');
+        await ensureCol('users', 'id', 'id', 'VARCHAR(50)');
+        await ensureCol('users', 'name', 'name', 'VARCHAR(255) AFTER id');
+        await ensureCol('users', 'username', 'username', 'VARCHAR(255) AFTER name');
+        await ensureCol('users', 'Email', 'email', 'VARCHAR(150) AFTER username');
+        await ensureCol('users', 'Password', 'password', 'VARCHAR(150) AFTER email');
+        await ensureCol('users', 'role', 'role', 'VARCHAR(50) AFTER password');
         await ensureCol('users', 'Region', 'region', 'VARCHAR(100) AFTER role');
+        await ensureCol('users', 'is_approved', 'is_approved', 'TINYINT(1) DEFAULT 1 AFTER role');
         await ensureCol('users', null, 'status', "ENUM('PENDING_APPROVAL', 'APPROVED', 'REJECTED', 'ACTIVE') DEFAULT 'ACTIVE' AFTER is_approved");
         await ensureCol('users', null, 'is_verified', 'TINYINT(1) DEFAULT 0 AFTER status');
+        await ensureCol('users', 'CreatedAt', 'created_at', 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER is_verified');
 
         // 3. Standardize detections
         await ensureCol('detections', 'DetectionID', 'id', 'VARCHAR(50)');
@@ -69,7 +71,7 @@ async function reconcile() {
         await ensureCol('detections', 'DetectionDate', 'detected_at', 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP');
         await ensureCol('detections', null, 'batch_id', 'VARCHAR(36) AFTER user_id');
         await ensureCol('detections', null, 'confidence', 'FLOAT DEFAULT 0');
-        await ensureCol('detections', null, 'disease_id', 'INT');
+        await ensureCol('detections', null, 'disease_id', 'VARCHAR(50)');
 
         // 4. Standardize analysis
         await ensureCol('analysis', 'AnalysisID', 'id', 'VARCHAR(50)');

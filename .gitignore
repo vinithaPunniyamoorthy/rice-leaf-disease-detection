@@ -1,0 +1,35 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Backend
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Flutter / Dart
+frontend/cropshield_app/build/
+frontend/cropshield_app/.dart_tool/
+frontend/cropshield_app/.packages
+frontend/cropshield_app/.flutter-plugins
+frontend/cropshield_app/.flutter-plugins-dependencies
+*.iml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.log

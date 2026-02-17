@@ -32,7 +32,7 @@ class _ViewAnalysisScreenState extends State<ViewAnalysisScreen> {
       final result = await ApiService.getDetections(token);
       if (mounted) {
         setState(() {
-          _detections = result['detections'] ?? [];
+          _detections = List<dynamic>.from(result['detections'] ?? []);
           _loading = false;
         });
       }

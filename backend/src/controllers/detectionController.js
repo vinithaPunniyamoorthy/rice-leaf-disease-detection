@@ -15,35 +15,34 @@ exports.createDetection = async (req, res) => {
     const now = new Date();
 
     try {
-        // A. Insert into images Table
+        // A. Insert into images Table (PascalCase: ImageID, UserID, ImagePath, UploadDate)
         await pool.execute(
-            'INSERT INTO images (id, user_id, image_path, upload_date) VALUES (?, ?, ?, ?)',
+            'INSERT INTO images (ImageID, UserID, ImagePath, UploadDate) VALUES (?, ?, ?, ?)',
             [imageId, userId, imagePath, now]
         );
 
-        // B. Mock Detection Logic
-        const modelId = 'model-002';
-        await pool.execute(
-            'INSERT INTO detections (id, user_id, image_path, confidence, detected_at) VALUES (?, ?, ?, ?, ?)',
-            [detectionId, userId, imagePath, 0.9, now]
-        );
-
-        // C. Assign Disease
-        const diseaseId = 1; // Rice Blast
-        await pool.execute(
-            'UPDATE detections SET disease_id = ? WHERE id = ?',
-            [diseaseId, detectionId]
-        );
-
-        // D. Create Analysis Summary
+        // B. Mock Detection Logic (Hybrid: id, user_id, ImageID, confidence, detected_at, disease_id)
         const summary = "Spindle-shaped spots on leaves detected. Diamond-shaped lesions with gray centers and brown margins present on nodes.";
+        const healthyProb = Math.floor(Math.random() * 30) + 10;   // 10-40%
         const riceBlastProb = Math.floor(Math.random() * 40) + 30; // 30-70%
-        const brownSpotProb = Math.floor(Math.random() * 20) + 10; // 10-30%
-        const otherProb = 100 - riceBlastProb - brownSpotProb;
+        const brownSpotProb = Math.floor(Math.random() * 20) + 5;  // 5-25%
+        const unknownProb = Math.max(0, 100 - healthyProb - riceBlastProb - brownSpotProb);
+
+        // Determine disease from highest probability
+        const maxProbVal = Math.max(healthyProb, riceBlastProb, brownSpotProb, unknownProb);
+        let diseaseId = 'dis-006'; // Default: Healthy
+        if (riceBlastProb === maxProbVal) diseaseId = 'dis-001';
+        else if (brownSpotProb === maxProbVal) diseaseId = 'dis-003';
 
         await pool.execute(
-            'INSERT INTO analysis (id, detection_id, analysis_date, summary, rice_blast_prob, brown_spot_prob, unknown_prob) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [analysisId, detectionId, now, summary, riceBlastProb, brownSpotProb, otherProb]
+            'INSERT INTO detections (id, user_id, ImageID, confidence, detected_at, disease_id) VALUES (?, ?, ?, ?, ?, ?)',
+            [detectionId, userId, imageId, maxProbVal / 100, now, diseaseId]
+        );
+
+        // C. Create Analysis Summary
+        await pool.execute(
+            'INSERT INTO analysis (id, detection_id, analysis_date, Summary, rice_blast_prob, brown_spot_prob, other_prob, healthy_prob, unknown_prob) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [analysisId, detectionId, now, summary, riceBlastProb, brownSpotProb, unknownProb, healthyProb, unknownProb]
         );
 
         res.status(201).json({
@@ -54,9 +53,10 @@ exports.createDetection = async (req, res) => {
             analysisId,
             summary,
             probabilities: {
+                'Healthy Crop': healthyProb,
                 'Rice Blast': riceBlastProb,
                 'Brown Spot': brownSpotProb,
-                'Other': otherProb
+                'Unknown Disease': unknownProb
             }
         });
     } catch (err) {
@@ -70,9 +70,10 @@ exports.getDetections = async (req, res) => {
     const userId = req.user.id;
     try {
         const [detections] = await pool.execute(
-            `SELECT d.id, d.detected_at, d.image_path, dis.name as disease_name, a.summary, a.rice_blast_prob, a.brown_spot_prob, a.unknown_prob
+            `SELECT d.id, d.detected_at, i.ImagePath as image_path, dis.DiseaseName as disease_name, a.Summary as summary, a.rice_blast_prob, a.brown_spot_prob, a.other_prob as unknown_prob
              FROM detections d
-             JOIN diseases dis ON d.disease_id = dis.id
+             LEFT JOIN images i ON d.ImageID = i.ImageID
+             LEFT JOIN diseases dis ON d.disease_id = dis.DiseaseID
              LEFT JOIN analysis a ON d.id = a.detection_id
              WHERE d.user_id = ?
              ORDER BY d.detected_at DESC`,
@@ -88,7 +89,7 @@ exports.getDetections = async (req, res) => {
 // 3. Submit Feedback (Expert only)
 exports.submitFeedback = async (req, res) => {
     const { recipient, message } = req.body;
-    const sender = req.user.username; // Use username as requested
+    const sender = req.user.username;
 
     if (!recipient || !message) {
         return res.status(400).json({ message: 'All field required', success: false });
@@ -97,8 +98,8 @@ exports.submitFeedback = async (req, res) => {
     try {
         const feedbackId = uuidv4();
         await pool.execute(
-            'INSERT INTO feedback (sender_username, receiver_username, message) VALUES (?, ?, ?)',
-            [sender, recipient, message]
+            'INSERT INTO feedback (id, sender_username, receiver_username, message) VALUES (?, ?, ?, ?)',
+            [feedbackId, sender, recipient, message]
         );
 
         res.status(201).json({
@@ -148,22 +149,15 @@ exports.getFarmerAnalysis = async (req, res) => {
     try {
         // A. Last 24 Hours Analysis
         const [last24h] = await pool.execute(
-            `SELECT a.rice_blast_prob, a.brown_spot_prob, d.detected_at, dis.name as disease_name,
+            `SELECT a.rice_blast_prob, a.brown_spot_prob, COALESCE(a.healthy_prob, 0) as healthy_prob, COALESCE(a.unknown_prob, 0) as unknown_prob, d.detected_at, dis.DiseaseName as disease_name,
              (CASE 
-                WHEN dis.name = 'Rice Blast' THEN a.rice_blast_prob
-                WHEN dis.name = 'Brown Spot' THEN a.brown_spot_prob
-                ELSE a.healthy_prob
+                WHEN dis.DiseaseName = 'Rice Blast' THEN a.rice_blast_prob
+                WHEN dis.DiseaseName = 'Brown Spot' THEN a.brown_spot_prob
+                ELSE COALESCE(a.healthy_prob, 0)
               END) as confidence
              FROM detections d
-             LEFT JOIN analysis a ON d.batch_id = a.detection_id
-             JOIN users u ON d.user_id = u.id
-             JOIN diseases dis ON (
-                CASE 
-                    WHEN a.rice_blast_prob >= a.brown_spot_prob AND a.rice_blast_prob >= a.healthy_prob THEN 1 
-                    WHEN a.brown_spot_prob >= a.rice_blast_prob AND a.brown_spot_prob >= a.healthy_prob THEN 3
-                    ELSE 6
-                END
-             ) = dis.id
+             LEFT JOIN analysis a ON d.id = a.detection_id
+             JOIN diseases dis ON d.disease_id = dis.DiseaseID
              WHERE d.user_id = ? AND d.detected_at >= NOW() - INTERVAL 1 DAY
              ORDER BY d.detected_at DESC`,
             [userId]
@@ -173,17 +167,10 @@ exports.getFarmerAnalysis = async (req, res) => {
         const [yearlyStats] = await pool.execute(
             `SELECT 
                 COUNT(*) as total_detections,
-                SUM(CASE WHEN dis.name = 'Rice Blast' THEN 1 ELSE 0 END) as rice_blast_count,
-                SUM(CASE WHEN dis.name = 'Brown Spot' THEN 1 ELSE 0 END) as brown_spot_count
+                SUM(CASE WHEN dis.DiseaseName = 'Rice Blast' THEN 1 ELSE 0 END) as rice_blast_count,
+                SUM(CASE WHEN dis.DiseaseName = 'Brown Spot' THEN 1 ELSE 0 END) as brown_spot_count
              FROM detections d
-             JOIN analysis a ON d.batch_id = a.detection_id
-             JOIN diseases dis ON (
-                CASE 
-                    WHEN a.rice_blast_prob >= a.brown_spot_prob AND a.rice_blast_prob >= a.healthy_prob THEN 1 
-                    WHEN a.brown_spot_prob >= a.rice_blast_prob AND a.brown_spot_prob >= a.healthy_prob THEN 3
-                    ELSE 6
-                END
-             ) = dis.id
+             JOIN diseases dis ON d.disease_id = dis.DiseaseID
              WHERE d.user_id = ? AND d.detected_at >= NOW() - INTERVAL 1 YEAR`,
             [userId]
         );
@@ -204,7 +191,6 @@ exports.getFarmerAnalysis = async (req, res) => {
 exports.getExpertAnalysisDashboard = async (req, res) => {
     const expertRegion = req.user.region;
     try {
-        // A. Farmers in Region with activity in past 24h
         const [activeFarmers] = await pool.execute(
             `SELECT DISTINCT u.username
              FROM users u
@@ -214,22 +200,14 @@ exports.getExpertAnalysisDashboard = async (req, res) => {
             [expertRegion]
         );
 
-        // B. Regional Yearly Summary
         const [regionalStats] = await pool.execute(
             `SELECT 
                 COUNT(*) as total_detections,
-                SUM(CASE WHEN dis.name = 'Rice Blast' THEN 1 ELSE 0 END) as rice_blast_count,
-                SUM(CASE WHEN dis.name = 'Brown Spot' THEN 1 ELSE 0 END) as brown_spot_count
+                SUM(CASE WHEN dis.DiseaseName = 'Rice Blast' THEN 1 ELSE 0 END) as rice_blast_count,
+                SUM(CASE WHEN dis.DiseaseName = 'Brown Spot' THEN 1 ELSE 0 END) as brown_spot_count
              FROM detections d
              JOIN users u ON d.user_id = u.id
-             JOIN analysis a ON d.batch_id = a.detection_id
-             JOIN diseases dis ON (
-                CASE 
-                    WHEN a.rice_blast_prob >= a.brown_spot_prob AND a.rice_blast_prob >= a.healthy_prob THEN 1 
-                    WHEN a.brown_spot_prob >= a.rice_blast_prob AND a.brown_spot_prob >= a.healthy_prob THEN 3
-                    ELSE 6
-                END
-             ) = dis.id
+             JOIN diseases dis ON d.disease_id = dis.DiseaseID
              WHERE u.region = ? AND d.detected_at >= NOW() - INTERVAL 1 YEAR`,
             [expertRegion]
         );
@@ -244,7 +222,8 @@ exports.getExpertAnalysisDashboard = async (req, res) => {
         res.status(500).json({ message: 'Server error fetching expert dashboard', success: false });
     }
 };
-// 5. Batch Image Upload & Detection (5-Point Analysis)
+
+// 7. Multi-Image Batch Detection
 exports.createBatchDetection = async (req, res) => {
     if (!req.files || req.files.length !== 5) {
         return res.status(400).json({
@@ -272,57 +251,66 @@ exports.createBatchDetection = async (req, res) => {
 
             // A. Insert into images Table
             await pool.execute(
-                'INSERT INTO images (id, user_id, image_path, upload_date) VALUES (?, ?, ?, ?)',
+                'INSERT INTO images (ImageID, UserID, ImagePath, UploadDate) VALUES (?, ?, ?, ?)',
                 [imageId, userId, imagePath, now]
             );
 
-            // B. Mock Detection & Analysis (Same logic as individual detection)
-            const riceBlastProb = Math.floor(Math.random() * 40) + 30; // 30-70%
-            const brownSpotProb = Math.floor(Math.random() * 20) + 10; // 10-30%
-            const healthyProb = Math.floor(Math.random() * 10) + 5;    // 5-15%
-            const unknownProb = 100 - riceBlastProb - brownSpotProb - healthyProb;
+            // B. Mock Detection
+            const healthyProb = Math.floor(Math.random() * 30) + 60;   // 60-90% for demo
+            const riceBlastProb = Math.floor(Math.random() * 10) + 5;  // 5-15%
+            const brownSpotProb = Math.floor(Math.random() * 10) + 2;  // 2-12%
+            const unknownProb = 100 - healthyProb - riceBlastProb - brownSpotProb;
 
+            totalHealthy += healthyProb;
             totalRiceBlast += riceBlastProb;
             totalBrownSpot += brownSpotProb;
-            totalHealthy += healthyProb;
             totalUnknown += unknownProb;
 
+            // C. Insert into detections Table
+            const maxProbVal = Math.max(healthyProb, riceBlastProb, brownSpotProb, unknownProb);
+            let diseaseId = 'dis-006'; // Default Healthy
+            if (riceBlastProb === maxProbVal) diseaseId = 'dis-001';
+            else if (brownSpotProb === maxProbVal) diseaseId = 'dis-003';
+
             await pool.execute(
-                'INSERT INTO detections (user_id, batch_id, image_path, confidence, detected_at) VALUES (?, ?, ?, ?, ?)',
-                [userId, batchId, imagePath, riceBlastProb / 100, now]
+                'INSERT INTO detections (id, user_id, batch_id, ImageID, confidence, detected_at, disease_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                [detectionId, userId, batchId, imageId, maxProbVal / 100, now, diseaseId]
             );
 
-            // We follow the Analysis table structure if it exists
+            // D. Insert into analysis Table
             await pool.execute(
-                'INSERT INTO analysis (id, detection_id, analysis_date, summary, rice_blast_prob, brown_spot_prob, healthy_prob, unknown_prob) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                [analysisId, batchId, now, "Batch image analysis", riceBlastProb, brownSpotProb, healthyProb, unknownProb]
+                'INSERT INTO analysis (id, detection_id, analysis_date, Summary, rice_blast_prob, brown_spot_prob, other_prob, healthy_prob, unknown_prob) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [analysisId, detectionId, now, "Batch image analysis", riceBlastProb, brownSpotProb, unknownProb, healthyProb, unknownProb]
             );
 
             results.push({
                 imagePath,
                 probabilities: {
+                    'Healthy Crop': healthyProb,
                     'Rice Blast': riceBlastProb,
                     'Brown Spot': brownSpotProb,
-                    'Healthy': healthyProb,
-                    'Unknown': unknownProb
+                    'Unknown Disease': unknownProb
                 }
             });
         }
 
-        // C. Calculate Averages
+        // E. Calculate Averages
+        const avgHealthy = totalHealthy / 5;
         const avgRiceBlast = totalRiceBlast / 5;
         const avgBrownSpot = totalBrownSpot / 5;
-        const avgHealthy = totalHealthy / 5;
         const avgUnknown = totalUnknown / 5;
 
-        let finalAssessment = "Field condition is generally healthy.";
-        if (avgRiceBlast > 40) finalAssessment = "Field condition: Serious Rice Blast threat detected.";
-        else if (avgBrownSpot > 40) finalAssessment = "Field condition: Serious Brown Spot threat detected.";
+        let finalAssessment = "Healthy field condition.";
+        if (avgRiceBlast > avgHealthy && avgRiceBlast > avgBrownSpot) {
+            finalAssessment = "Field condition: Serious Rice Blast threat detected.";
+        } else if (avgBrownSpot > avgHealthy && avgBrownSpot > avgRiceBlast) {
+            finalAssessment = "Field condition: Serious Brown Spot threat detected.";
+        }
 
-        // D. Store Batch Summary
+        // F. Save to batch_summaries
         await pool.execute(
-            'INSERT INTO batch_summaries (batch_id, avg_healthy, avg_rice_blast, avg_brown_spot, avg_unknown, final_assessment) VALUES (?, ?, ?, ?, ?, ?)',
-            [batchId, avgHealthy, avgRiceBlast, avgBrownSpot, avgUnknown, finalAssessment]
+            'INSERT INTO batch_summaries (batch_id, avg_healthy, avg_rice_blast, avg_brown_spot, avg_unknown, final_assessment, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [batchId, avgHealthy, avgRiceBlast, avgBrownSpot, avgUnknown, finalAssessment, now]
         );
 
         res.status(201).json({

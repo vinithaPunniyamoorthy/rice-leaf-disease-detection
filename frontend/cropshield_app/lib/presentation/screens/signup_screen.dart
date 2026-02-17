@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../data/api_service.dart';
-import '../../data/auth_provider.dart';
 import '../../core/app_colors.dart';
 import 'farmer_dashboard.dart';
 import 'expert_dashboard.dart';
-import 'email_verification_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
@@ -16,25 +13,20 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   bool _isPasswordVisible = false;
+  bool _isLoading = false;
   final _formKey = GlobalKey<FormState>();
-  
-  final _usernameController = TextEditingController(); // Renamed from _nameController
+
+  final _usernameController =
+      TextEditingController(); // Renamed from _nameController
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   String? selectedRole;
   String? selectedRegion;
 
-  final List<String> userRoles = [
-    'Farmer',
-    'Field Expert',
-  ];
+  final List<String> userRoles = ['Farmer', 'Field Expert'];
 
-  final List<String> regions = [
-    'Dry Zone',
-    'Wet Zone',
-    'Intermediate Zone',
-  ];
+  final List<String> regions = ['Dry Zone', 'Wet Zone', 'Intermediate Zone'];
 
   void _navigateToHome(String role) {
     Widget dashboard;
@@ -50,33 +42,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  void _showExpertVerificationDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Registration Pending'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Your account has been created.'),
-            SizedBox(height: 8),
-            Text('Admin must approve Field Expert before you can log in.'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back to login
-            },
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
+  // Legacy Expert verification dialog removed in favor of link-based flow
 
   @override
   Widget build(BuildContext context) {
@@ -100,12 +66,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
               Text(
                 'User Registration', // Updated heading
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 32),
-              
+
               TextFormField(
                 controller: _usernameController, // Changed controller
                 decoration: const InputDecoration(
@@ -113,10 +79,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   prefixIcon: Icon(Icons.person_outline),
                   helperText: 'Username must be unique', // Added helper text
                 ),
-                validator: (value) => value!.isEmpty ? 'All field required' : null,
+                validator: (value) =>
+                    value!.isEmpty ? 'All field required' : null,
               ),
               const SizedBox(height: 16),
-              
+
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(
@@ -135,7 +102,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   return null;
                 },
               ),
-              
+
               const SizedBox(height: 16),
 
               TextFormField(
@@ -146,7 +113,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                      _isPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
                     ),
                     onPressed: () {
                       setState(() {
@@ -155,10 +124,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     },
                   ),
                 ),
-                validator: (value) => value!.isEmpty ? 'All field required' : (value.length < 6 ? 'Password must be at least 6 chars' : null),
+                validator: (value) => value!.isEmpty
+                    ? 'All field required'
+                    : (value.length < 6
+                          ? 'Password must be at least 6 chars'
+                          : null),
               ),
               const SizedBox(height: 16), // Moved password field up
-
               // USER ROLE DROPDOWN
               DropdownButtonFormField<String>(
                 decoration: const InputDecoration(
@@ -179,7 +151,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     selectedRole = value;
                   });
                 },
-                validator: (value) => value == null ? 'All field required' : null,
+                validator: (value) =>
+                    value == null ? 'All field required' : null,
               ),
               const SizedBox(height: 16),
 
@@ -203,50 +176,138 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     selectedRegion = value;
                   });
                 },
-                validator: (value) => value == null ? 'All field required' : null,
+                validator: (value) =>
+                    value == null ? 'All field required' : null,
               ),
               const SizedBox(height: 32), // Adjusted SizedBox height
-              
-              ElevatedButton(
-                onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    try {
-                      final result = await ApiService.register({
-                        'username': _usernameController.text, // Changed key and controller
-                        'email': _emailController.text,
-                        // 'phone': _phoneController.text, // Removed as per new design if not needed, or add back if schema requires
-                        'role': selectedRole,
-                        'region': selectedRegion,
-                        'password': _passwordController.text,
-                      });
 
-                      if (mounted) {
-                        if (result['success'] == true) {
-                          if (selectedRole == 'Field Expert') {
-                            _showExpertVerificationDialog(); // New dialog for experts
-                          } else {
-                             _navigateToHome('Farmer'); // Farmers navigate directly
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton(
+                  onPressed: _isLoading
+                      ? null
+                      : () async {
+                          if (_formKey.currentState!.validate()) {
+                            setState(() => _isLoading = true);
+                            try {
+                              final result = await ApiService.register({
+                                'username': _usernameController.text.trim(),
+                                'email': _emailController.text.trim(),
+                                'role': selectedRole,
+                                'region': selectedRegion,
+                                'password': _passwordController.text,
+                              });
+
+                              if (mounted) {
+                                setState(() => _isLoading = false);
+                                if (result['success'] == true) {
+                                  if (selectedRole == 'Field Expert') {
+                                    // Experts wait for Admin approval
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text(
+                                          'Registration Pending',
+                                        ),
+                                        content: const Text(
+                                          'Your account has been created and is pending admin approval. You will receive an email once an admin reviews and approves your request.',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(
+                                                context,
+                                              ); // Close dialog
+                                              Navigator.pop(
+                                                context,
+                                              ); // Go back to login
+                                            },
+                                            child: const Text('OK'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  } else {
+                                    // Farmers must verify email via link
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text('Verify Your Email'),
+                                        content: const Text(
+                                          'A verification link has been sent to your email. Please click the link to activate your account before logging in.',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(
+                                                context,
+                                              ); // Close dialog
+                                              Navigator.pop(
+                                                context,
+                                              ); // Go back to login
+                                            },
+                                            child: const Text('OK'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        result['message'] ?? 'Signup failed',
+                                      ),
+                                      action: SnackBarAction(
+                                        label: 'Retry',
+                                        onPressed:
+                                            () {}, // User can click again
+                                      ),
+                                    ),
+                                  );
+                                }
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                setState(() => _isLoading = false);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Connection lost. Please try again.',
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
                           }
-                        } else {
-                          String message = result['message'] ?? 'Signup failed';
-                          if (message == 'Username already exists' || message == 'Email already exists') {
-                            // Message is already specific enough
-                          }
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(message)),
-                          );
-                        }
-                      }
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error: $e')),
-                        );
-                      }
-                    }
-                  }
-                },
-                child: const Text('Create Account'),
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          'Create Account',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
               ),
               const SizedBox(height: 24),
               Row(

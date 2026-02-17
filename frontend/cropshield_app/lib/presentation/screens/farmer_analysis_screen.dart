@@ -33,7 +33,7 @@ class _FarmerAnalysisScreenState extends State<FarmerAnalysisScreen> {
       final response = await ApiService.getFarmerAnalysis(token!, username: widget.targetUsername);
       if (mounted) {
         setState(() {
-          _analysisData = response;
+          _analysisData = Map<String, dynamic>.from(response);
           _isLoading = false;
         });
       }

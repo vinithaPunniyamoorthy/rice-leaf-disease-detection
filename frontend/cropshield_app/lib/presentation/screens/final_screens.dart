@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/app_colors.dart';
 import 'login_options_screen.dart';
 
 // ViewFeedbackScreen was moved to feedback_screens.dart to support expert-to-farmer feedback linkage.
@@ -10,7 +9,9 @@ class LogoutConfirmationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D2310), // Very dark green as seen in image
+      backgroundColor: const Color(
+        0xFF0D2310,
+      ), // Very dark green as seen in image
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32.0),
@@ -19,7 +20,11 @@ class LogoutConfirmationScreen extends StatelessWidget {
             children: [
               const Text(
                 'See you soon!',
-                style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 12),
               const Text(
@@ -34,17 +39,27 @@ class LogoutConfirmationScreen extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: Colors.green.withOpacity(0.1),
                   boxShadow: [
-                    BoxShadow(color: Colors.green.withOpacity(0.2), blurRadius: 40, spreadRadius: 10),
+                    BoxShadow(
+                      color: Colors.green.withOpacity(0.2),
+                      blurRadius: 40,
+                      spreadRadius: 10,
+                    ),
                   ],
                 ),
-                child: const Icon(Icons.shield, size: 80, color: Colors.greenAccent),
+                child: const Icon(
+                  Icons.shield,
+                  size: 80,
+                  color: Colors.greenAccent,
+                ),
               ),
               const SizedBox(height: 80),
               ElevatedButton(
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => const LoginOptionsScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => const LoginOptionsScreen(),
+                    ),
                     (route) => false,
                   );
                 },

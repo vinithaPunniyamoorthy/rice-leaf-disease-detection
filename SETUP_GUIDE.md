@@ -5,7 +5,29 @@
 1. **XAMPP Installed** (with MySQL and Apache)
 2. **Node.js Installed** (v14 or higher)
 3. **Flutter Installed** (Latest stable version)
-4. **Physical Device or Emulator** for testing
+4. **Java JDK 17 or 21** for Android builds (see [Java setup](#java-jdk-for-android-builds) below)
+5. **Physical Device or Emulator** for testing
+
+---
+
+## ☕ Java (JDK) for Android builds
+
+Flutter Android builds require a **JDK 17 or 21** (not JDK 25). Set **JAVA_HOME** to your JDK root.
+
+**Install JDK 21 (recommended):**
+- Download: [Eclipse Temurin JDK 21 (Windows x64)](https://adoptium.net/temurin/releases/?version=21&os=windows&arch=x64)
+- Run the installer. Note the install path (e.g. `C:\Program Files\Eclipse Adoptium\jdk-21.x.x-hotspot`).
+
+**Set JAVA_HOME:**
+1. **Windows:** Search **“Environment Variables”** → **Edit the system environment variables** → **Environment Variables**.
+2. Under **User variables** (or **System variables**), click **New** (or edit **JAVA_HOME** if it exists).
+3. Variable name: `JAVA_HOME`  
+   Variable value: JDK root folder (the one that contains a `bin` folder), e.g.  
+   `C:\Program Files\Eclipse Adoptium\jdk-21.0.5.11-hotspot`
+4. Click **OK** on all dialogs.
+5. **Restart the terminal** (and Cursor/IDE if you run Flutter from there).
+
+**Verify:** In a new terminal run `echo $env:JAVA_HOME` (PowerShell) and confirm it shows the JDK path.
 
 ---
 

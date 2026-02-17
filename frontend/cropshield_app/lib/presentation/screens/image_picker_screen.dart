@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/app_colors.dart';
 import 'detection_result_screen.dart';
 
 class ImagePickerScreen extends StatelessWidget {
@@ -11,7 +10,10 @@ class ImagePickerScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('Select Image', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
-        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.black), onPressed: () => Navigator.pop(context)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: GridView.builder(
         padding: const EdgeInsets.all(16),
@@ -25,13 +27,20 @@ class ImagePickerScreen extends StatelessWidget {
           return InkWell(
             onTap: () {
               // Mock select and analyze
-              Navigator.push(context, MaterialPageRoute(builder: (context) => DetectionResultScreen()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DetectionResultScreen(),
+                ),
+              );
             },
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
                 image: const DecorationImage(
-                  image: NetworkImage('https://images.unsplash.com/photo-1536633310197-39148d89e5dc?q=80&w=200&auto=format&fit=crop'),
+                  image: NetworkImage(
+                    'https://images.unsplash.com/photo-1536633310197-39148d89e5dc?q=80&w=200&auto=format&fit=crop',
+                  ),
                   fit: BoxFit.cover,
                 ),
               ),

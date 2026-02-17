@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -19,9 +18,9 @@ class _CaptureFlowScreenState extends State<CaptureFlowScreen> {
   int _currentStep = 1;
   final int _maxSteps = 5;
   bool _isAnalyzing = false;
-  
+
   final List<String> _imagePaths = [];
-  
+
   final Map<int, String> _stepInstructions = {
     1: "Capture image from the 1st corner of the field",
     2: "Go to the 2nd corner of the field",
@@ -64,8 +63,14 @@ class _CaptureFlowScreenState extends State<CaptureFlowScreen> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: Text('Image $_currentStep Captured'),
-        content: Text(_stepInstructions[_currentStep + 1]!, 
-          style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 18)),
+        content: Text(
+          _stepInstructions[_currentStep + 1]!,
+          style: const TextStyle(
+            color: AppColors.primary,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () {
@@ -103,7 +108,10 @@ class _CaptureFlowScreenState extends State<CaptureFlowScreen> {
     setState(() => _isAnalyzing = true);
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final result = await ApiService.createBatchDetection(authProvider.token!, _imagePaths);
+      final result = await ApiService.createBatchDetection(
+        authProvider.token!,
+        _imagePaths,
+      );
 
       if (mounted) {
         if (result['success'] == true) {
@@ -125,7 +133,9 @@ class _CaptureFlowScreenState extends State<CaptureFlowScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isAnalyzing = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -133,9 +143,7 @@ class _CaptureFlowScreenState extends State<CaptureFlowScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Field Coverage Scan'),
-      ),
+      appBar: AppBar(title: const Text('Field Coverage Scan')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -148,15 +156,21 @@ class _CaptureFlowScreenState extends State<CaptureFlowScreen> {
             if (_isAnalyzing)
               Column(
                 children: [
-                   const CircularProgressIndicator(color: AppColors.primary),
-                   const SizedBox(height: 16),
-                   Text('Analyzing Step $_currentStep...', style: const TextStyle(fontStyle: FontStyle.italic)),
+                  const CircularProgressIndicator(color: AppColors.primary),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Analyzing Step $_currentStep...',
+                    style: const TextStyle(fontStyle: FontStyle.italic),
+                  ),
                 ],
               )
             else
               Column(
                 children: [
-                  const Text('Enable camera to start capture', style: TextStyle(color: Colors.grey)),
+                  const Text(
+                    'Enable camera to start capture',
+                    style: TextStyle(color: Colors.grey),
+                  ),
                   const SizedBox(height: 12),
                   Transform.scale(
                     scale: 1.5,
@@ -167,7 +181,10 @@ class _CaptureFlowScreenState extends State<CaptureFlowScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text('Capture Image', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Capture Image',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
           ],
@@ -176,4 +193,3 @@ class _CaptureFlowScreenState extends State<CaptureFlowScreen> {
     );
   }
 }
-

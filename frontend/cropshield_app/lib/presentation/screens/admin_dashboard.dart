@@ -4,10 +4,11 @@ import '../../core/app_colors.dart';
 import '../../data/auth_provider.dart';
 import 'camera_screen.dart';
 import 'image_picker_screen.dart';
-import 'final_screens.dart';
+
 import 'view_analysis_screen.dart';
 import 'login_options_screen.dart';
 import 'feedback_screens.dart';
+import 'pending_experts_screen.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -20,7 +21,13 @@ class AdminDashboard extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
-        title: const Text('CROPSHIELD ADMIN', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+        title: const Text(
+          'CROPSHIELD ADMIN',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
+          ),
+        ),
         centerTitle: false,
         backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
@@ -47,11 +54,19 @@ class AdminDashboard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.admin_panel_settings, size: 40, color: Colors.white),
+                  const Icon(
+                    Icons.admin_panel_settings,
+                    size: 40,
+                    color: Colors.white,
+                  ),
                   const SizedBox(height: 12),
                   Text(
                     'Welcome, $userName!',
-                    style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   const Text(
@@ -63,7 +78,10 @@ class AdminDashboard extends StatelessWidget {
             ),
             const SizedBox(height: 28),
 
-            const Text('Quick Actions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              'Quick Actions',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 16),
 
             // 4 Action Buttons Grid
@@ -80,7 +98,10 @@ class AdminDashboard extends StatelessWidget {
                   label: 'Capture Image',
                   subtitle: 'Use camera',
                   color: const Color(0xFF2E7D32),
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CameraScreen())),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => CameraScreen()),
+                  ),
                 ),
                 _buildActionCard(
                   context,
@@ -88,7 +109,10 @@ class AdminDashboard extends StatelessWidget {
                   label: 'Upload Image',
                   subtitle: 'From gallery',
                   color: const Color(0xFF1565C0),
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ImagePickerScreen())),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => ImagePickerScreen()),
+                  ),
                 ),
                 _buildActionCard(
                   context,
@@ -96,7 +120,10 @@ class AdminDashboard extends StatelessWidget {
                   label: 'View Feedback',
                   subtitle: 'Read-only',
                   color: const Color(0xFFEF6C00),
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ViewFeedbackScreen())),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => ViewFeedbackScreen()),
+                  ),
                 ),
                 _buildActionCard(
                   context,
@@ -104,7 +131,23 @@ class AdminDashboard extends StatelessWidget {
                   label: 'View Analysis',
                   subtitle: 'All results',
                   color: const Color(0xFF7B1FA2),
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ViewAnalysisScreen())),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => ViewAnalysisScreen()),
+                  ),
+                ),
+                _buildActionCard(
+                  context,
+                  icon: Icons.verified_user_outlined,
+                  label: 'Approve Experts',
+                  subtitle: 'Pending requests',
+                  color: const Color(0xFFC2185B),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PendingExpertsScreen(),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -114,7 +157,8 @@ class AdminDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildActionCard(BuildContext context, {
+  Widget _buildActionCard(
+    BuildContext context, {
     required IconData icon,
     required String label,
     required String subtitle,
@@ -128,7 +172,13 @@ class AdminDashboard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 4))],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -142,9 +192,15 @@ class AdminDashboard extends StatelessWidget {
               child: Icon(icon, color: color, size: 32),
             ),
             const SizedBox(height: 12),
-            Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
             const SizedBox(height: 4),
-            Text(subtitle, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+            Text(
+              subtitle,
+              style: TextStyle(color: Colors.grey[500], fontSize: 12),
+            ),
           ],
         ),
       ),

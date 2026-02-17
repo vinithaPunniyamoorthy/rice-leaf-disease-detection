@@ -3,8 +3,6 @@ import 'package:provider/provider.dart';
 import '../../core/app_colors.dart';
 import '../../data/auth_provider.dart';
 import '../../data/api_service.dart';
-import 'camera_screen.dart';
-import 'image_picker_screen.dart';
 import 'feedback_submission_screen.dart';
 import 'expert_analysis_screen.dart';
 import 'login_options_screen.dart';
@@ -51,7 +49,13 @@ class _ExpertDashboardState extends State<ExpertDashboard> {
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
-        title: const Text('EXPERT PANEL', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+        title: const Text(
+          'EXPERT PANEL',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
+          ),
+        ),
         centerTitle: false,
         backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
@@ -82,7 +86,11 @@ class _ExpertDashboardState extends State<ExpertDashboard> {
                   const SizedBox(height: 12),
                   Text(
                     'Welcome, $userName!',
-                    style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   const Text(
@@ -95,7 +103,10 @@ class _ExpertDashboardState extends State<ExpertDashboard> {
             const SizedBox(height: 24),
 
             // Admin Details Section (Required)
-            const Text('Admin Contact Details', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const Text(
+              'Admin Contact Details',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(16),
@@ -104,23 +115,33 @@ class _ExpertDashboardState extends State<ExpertDashboard> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.blueGrey.withOpacity(0.1)),
               ),
-              child: _isLoadingAdmins 
-                ? const Center(child: CircularProgressIndicator())
-                : _admins.isEmpty 
+              child: _isLoadingAdmins
+                  ? const Center(child: CircularProgressIndicator())
+                  : _admins.isEmpty
                   ? const Text('No admin details available.')
                   : Column(
-                      children: _admins.map((admin) => ListTile(
-                        leading: const Icon(Icons.admin_panel_settings, color: Colors.blueGrey),
-                        title: Text(admin['admin_name'] ?? 'Admin'),
-                        subtitle: Text(admin['email'] ?? ''),
-                        contentPadding: EdgeInsets.zero,
-                        dense: true,
-                      )).toList(),
+                      children: _admins
+                          .map(
+                            (admin) => ListTile(
+                              leading: const Icon(
+                                Icons.admin_panel_settings,
+                                color: Colors.blueGrey,
+                              ),
+                              title: Text(admin['admin_name'] ?? 'Admin'),
+                              subtitle: Text(admin['email'] ?? ''),
+                              contentPadding: EdgeInsets.zero,
+                              dense: true,
+                            ),
+                          )
+                          .toList(),
                     ),
             ),
             const SizedBox(height: 28),
 
-            const Text('Expert Actions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              'Expert Actions',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 16),
 
             // 5 Action Buttons Grid
@@ -138,9 +159,12 @@ class _ExpertDashboardState extends State<ExpertDashboard> {
                   subtitle: 'Use camera',
                   color: const Color(0xFF2E7D32),
                   onTap: () => _showPermissionDialog(
-                    context, 
-                    title: "Allow access for camera", 
-                    onConfirm: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CaptureFlowScreen())),
+                    context,
+                    title: "Allow access for camera",
+                    onConfirm: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => CaptureFlowScreen()),
+                    ),
                   ),
                 ),
                 _buildActionCard(
@@ -150,9 +174,14 @@ class _ExpertDashboardState extends State<ExpertDashboard> {
                   subtitle: 'From gallery',
                   color: const Color(0xFF1565C0),
                   onTap: () => _showPermissionDialog(
-                    context, 
-                    title: "Allow access for gallery", 
-                    onConfirm: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MultiImagePickerScreen())),
+                    context,
+                    title: "Allow access for gallery",
+                    onConfirm: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MultiImagePickerScreen(),
+                      ),
+                    ),
                   ),
                 ),
                 _buildActionCard(
@@ -161,7 +190,12 @@ class _ExpertDashboardState extends State<ExpertDashboard> {
                   label: 'Send Feedback',
                   subtitle: 'Advise farmers',
                   color: const Color(0xFFEF6C00),
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => FeedbackSubmissionScreen())),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => FeedbackSubmissionScreen(),
+                    ),
+                  ),
                 ),
                 _buildActionCard(
                   context,
@@ -169,7 +203,10 @@ class _ExpertDashboardState extends State<ExpertDashboard> {
                   label: 'View Analysis',
                   subtitle: 'View results',
                   color: const Color(0xFF7B1FA2),
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ExpertAnalysisScreen())),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => ExpertAnalysisScreen()),
+                  ),
                 ),
               ],
             ),
@@ -179,7 +216,8 @@ class _ExpertDashboardState extends State<ExpertDashboard> {
     );
   }
 
-  Widget _buildActionCard(BuildContext context, {
+  Widget _buildActionCard(
+    BuildContext context, {
     required IconData icon,
     required String label,
     required String subtitle,
@@ -193,7 +231,13 @@ class _ExpertDashboardState extends State<ExpertDashboard> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 4))],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -207,16 +251,26 @@ class _ExpertDashboardState extends State<ExpertDashboard> {
               child: Icon(icon, color: color, size: 32),
             ),
             const SizedBox(height: 12),
-            Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
             const SizedBox(height: 4),
-            Text(subtitle, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+            Text(
+              subtitle,
+              style: TextStyle(color: Colors.grey[500], fontSize: 12),
+            ),
           ],
         ),
       ),
     );
   }
 
-  void _showPermissionDialog(BuildContext context, {required String title, required VoidCallback onConfirm}) {
+  void _showPermissionDialog(
+    BuildContext context, {
+    required String title,
+    required VoidCallback onConfirm,
+  }) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -266,4 +320,3 @@ class _ExpertDashboardState extends State<ExpertDashboard> {
     );
   }
 }
-

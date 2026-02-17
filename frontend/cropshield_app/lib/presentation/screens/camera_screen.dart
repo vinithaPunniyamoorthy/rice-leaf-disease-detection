@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/app_colors.dart';
 import 'detection_result_screen.dart';
 
 class CameraScreen extends StatelessWidget {
@@ -20,7 +19,10 @@ class CameraScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Center(
-                child: Text('Align Leaf Here', style: TextStyle(color: Colors.white, fontSize: 18)),
+                child: Text(
+                  'Align Leaf Here',
+                  style: TextStyle(color: Colors.white, fontSize: 18),
+                ),
               ),
             ),
           ),
@@ -39,7 +41,12 @@ class CameraScreen extends StatelessWidget {
             child: Center(
               child: InkWell(
                 onTap: () {
-                   Navigator.push(context, MaterialPageRoute(builder: (context) => DetectionResultScreen()));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DetectionResultScreen(),
+                    ),
+                  );
                 },
                 child: Container(
                   width: 80,

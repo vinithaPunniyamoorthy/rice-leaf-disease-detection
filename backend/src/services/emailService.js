@@ -54,7 +54,7 @@ exports.sendVerificationLink = async (email, link, userName) => {
                     <p style="color: #2563eb; font-size: 13px; word-break: break-all;">${link}</p>
                     <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
                     <p style="color: #9ca3af; font-size: 12px; text-align: center;">
-                        This link will expire in 15 minutes. If you did not create an account, please ignore this email.
+                        This link will expire in 24 hours. If you did not create an account, please ignore this email.
                     </p>
                 </div>
             `
@@ -73,19 +73,28 @@ exports.sendVerificationLink = async (email, link, userName) => {
 /**
  * Send a password reset email.
  */
-exports.sendPasswordResetEmail = async (email, userName) => {
+exports.sendPasswordResetEmail = async (email, userName, link) => {
     try {
         const mailOptions = {
             from: `"CropShield" <${process.env.GMAIL_USER}>`,
             to: email,
             subject: 'Password Reset Request',
             html: `
-                <div style="font-family: 'Segoe UI', Arial, sans-serif;">
-                    <h1 style="color: #1a7f37;">🌾 CropShield</h1>
-                    <p>Hi ${userName},</p>
-                    <p>You requested a password reset. Please click the link below to reset your password:</p>
-                    <p><a href="http://localhost:3000/reset-password">Reset Password</a></p>
-                    <p>If you didn't request this, please ignore this email.</p>
+                <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px; background: #ffffff; border-radius: 12px; border: 1px solid #e5e7eb;">
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        <h1 style="color: #1a7f37; margin: 0; font-size: 24px;">🌾 CropShield</h1>
+                    </div>
+                    <h2 style="color: #1f2937; font-size: 20px; margin-bottom: 12px;">Reset Your Password</h2>
+                    <p style="color: #4b5563; font-size: 15px; line-height: 1.6;">Hi ${userName},</p>
+                    <p style="color: #4b5563; font-size: 15px; line-height: 1.6;">
+                        You requested to reset your password. Please click the button below to set a new password.
+                    </p>
+                    <div style="text-align: center; margin: 28px 0;">
+                        <a href="${link}" style="background-color: #166534; color: #ffffff; padding: 12px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600; display: inline-block;">
+                            Reset Password
+                        </a>
+                    </div>
+                    <p style="color: #6b7280; font-size: 13px;">If you did not request this, please ignore this email.</p>
                 </div>
             `
         };

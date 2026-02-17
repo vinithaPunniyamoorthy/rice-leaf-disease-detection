@@ -24,7 +24,9 @@ class _ViewFeedbackScreenState extends State<ViewFeedbackScreen> {
   Future<void> _fetchFeedback() async {
     try {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
-      final response = await ApiService.getFarmerFeedback(token!); // I'll need to add this to ApiService
+      final response = await ApiService.getFarmerFeedback(
+        token!,
+      ); // I'll need to add this to ApiService
       if (mounted && response['success'] == true) {
         setState(() {
           _feedbackList = response['feedback'] ?? [];
@@ -40,9 +42,9 @@ class _ViewFeedbackScreenState extends State<ViewFeedbackScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Expert Feedback')),
-      body: _isLoading 
-        ? const Center(child: CircularProgressIndicator())
-        : _feedbackList.isEmpty 
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _feedbackList.isEmpty
           ? const Center(child: Text('No feedback received yet.'))
           : ListView.builder(
               itemCount: _feedbackList.length,
@@ -51,14 +53,23 @@ class _ViewFeedbackScreenState extends State<ViewFeedbackScreen> {
                 return Card(
                   margin: const EdgeInsets.all(12),
                   child: ListTile(
-                    leading: const Icon(Icons.psychology, color: AppColors.primary),
+                    leading: const Icon(
+                      Icons.psychology,
+                      color: AppColors.primary,
+                    ),
                     title: Text('Expert: ${f['expert_name']}'),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(f['feedback_text'] ?? ''),
                         const SizedBox(height: 4),
-                        Text('Date: ${f['created_at']}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                        Text(
+                          'Date: ${f['created_at']}',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -92,7 +103,9 @@ class _SubmitFeedbackScreenState extends State<SubmitFeedbackScreen> {
   Future<void> _submit() async {
     final text = _feedbackController.text.trim();
     if (text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter feedback')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter feedback')));
       return;
     }
 
@@ -101,21 +114,25 @@ class _SubmitFeedbackScreenState extends State<SubmitFeedbackScreen> {
     try {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
       // In a real app, we'd have selected a farmer/image. For this demo, we'll use props or mock.
-      final result = await ApiService.submitFeedback(
-        token!, 
-        widget.farmerId ?? 'mock-farmer-id', 
-        text
+      await ApiService.submitFeedback(
+        token!,
+        widget.farmerId ?? 'mock-farmer-id',
+        text,
       );
 
       if (mounted) {
         setState(() => _isSubmitting = false);
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feedback submitted!')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Feedback submitted!')));
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isSubmitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -128,17 +145,25 @@ class _SubmitFeedbackScreenState extends State<SubmitFeedbackScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            const Text('Provide your expert advice:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              'Provide your expert advice:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 16),
             TextField(
               controller: _feedbackController,
               maxLines: 5,
-              decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Enter feedback...'),
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Enter feedback...',
+              ),
             ),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _isSubmitting ? null : _submit,
-              child: _isSubmitting ? const CircularProgressIndicator() : const Text('SUBMIT'),
+              child: _isSubmitting
+                  ? const CircularProgressIndicator()
+                  : const Text('SUBMIT'),
             ),
           ],
         ),
@@ -159,4 +184,3 @@ class FieldEvaluationScreen extends StatelessWidget {
     );
   }
 }
-
