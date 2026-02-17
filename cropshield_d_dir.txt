@@ -1,0 +1,16 @@
+﻿
+
+    Directory: D:\CropShield_2
+
+
+Mode                 LastWriteTime         Length Name                                           
+----                 -------------         ------ ----                                           
+d-----         1/22/2026   8:45 AM                .idea                                          
+d-----         1/23/2026  10:30 AM                .vscode                                        
+d-----         1/22/2026   8:59 AM                backend                                        
+d-----         1/24/2026  11:38 PM                CropShieldApp                                  
+d-----         1/22/2026   8:13 AM                node_modules                                   
+-a----         1/22/2026   8:22 AM         136103 package-lock.json                              
+-a----         1/22/2026   8:13 AM             82 package.json                                   
+
+

@@ -1,0 +1,33 @@
+﻿
+
+    Directory: C:\Users\vinit\AppData\Local\Android\Sdk
+
+
+Mode                 LastWriteTime         Length Name                                           
+----                 -------------         ------ ----                                           
+d-----         2/11/2026   2:54 PM                .downloadIntermediates                         
+d-----         2/11/2026   2:55 PM                .temp                                          
+d-----         1/30/2026  10:25 PM                build-tools                                    
+d-----         1/27/2026   5:04 AM                cmake                                          
+d-----         1/26/2026   1:17 PM                emulator                                       
+d-----         1/26/2026   1:04 PM                extras                                         
+d-----         1/26/2026  12:54 PM                licenses                                       
+d-----         1/31/2026   6:47 PM                ndk                                            
+d-----         1/26/2026  11:33 AM                platform-tools                                 
+d-----         1/26/2026   1:28 PM                platform-tools-10                              
+d-----         1/26/2026   1:04 PM                platform-tools-2                               
+d-----         1/26/2026   1:05 PM                platform-tools-3                               
+d-----         1/26/2026   1:05 PM                platform-tools-4                               
+d-----         1/26/2026   1:05 PM                platform-tools-5                               
+d-----         1/26/2026   1:16 PM                platform-tools-6                               
+d-----         1/26/2026   1:17 PM                platform-tools-7                               
+d-----         1/26/2026   1:17 PM                platform-tools-8                               
+d-----         1/26/2026   1:17 PM                platform-tools-9                               
+d-----         1/27/2026   7:06 AM                platforms                                      
+d-----         1/23/2026   4:22 PM                skins                                          
+d-----         1/26/2026   1:28 PM                sources                                        
+d-----         2/11/2026   2:52 PM                system-images                                  
+-a----         2/13/2026   5:27 PM             16 .knownPackages                                 
+-a----         1/26/2026  12:31 PM       11109914 cmdline-tools.zip                              
+
+

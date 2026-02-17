@@ -1,0 +1,12 @@
+﻿
+
+    Directory: C:\Program 
+    Files\Android\Android 
+    Studio\jbr\bin
+
+
+Mode            LastWriteTime
+----            -------------
+-a----     1/9/2026   9:58 PM
+
+

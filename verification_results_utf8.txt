@@ -1,0 +1,9 @@
+﻿--- Testing Farmer Flow ---
+Farmer Register Status: 404 undefined
+Farmer Login (Unverified) Status: 404 undefined
+
+--- Testing Field Expert Flow ---
+Expert Register Status: 404 undefined
+Expert Login (Pending) Status: 404 undefined
+
+Verification complete. Manual check of admin approval and email link required for full end-to-end.

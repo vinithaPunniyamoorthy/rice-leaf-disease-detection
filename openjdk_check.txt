@@ -1,0 +1,22 @@
+﻿java.exe : openjdk version 
+"24.0.2" 2025-07-15
+At line:1 char:1
++ & "C:\Users\vinit\.jdks\ope
+njdk-24.0.2\bin\java.exe" 
+-version 2>&1 |  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (openjdk  
+   version "24.0.2" 2025-0   
+ 7-15:String) [], RemoteE    
+xception
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+OpenJDK Runtime Environment 
+(build 24.0.2+12-54)
+OpenJDK 64-Bit Server VM 
+(build 24.0.2+12-54, mixed 
+mode, sharing)

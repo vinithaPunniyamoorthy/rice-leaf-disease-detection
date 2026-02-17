@@ -1,0 +1,9 @@
+﻿Starting Diag
+JAVA_HOME: C:\Program Files\Java\jdk-21
+CHECKING JAVA
+CHECKING FLUTTER
+Flutter 3.38.7 ΓÇó channel stable ΓÇó https://github.com/flutter/flutter.git
+Framework ΓÇó revision 3b62efc2a3 (5 weeks ago) ΓÇó 2026-01-13 13:47:42 -0800
+Engine ΓÇó hash 6f3039bf7c3cb5306513c75092822d4d94716003 (revision 78fc3012e4) (1 months ago) ΓÇó 2026-01-07 18:42:12.000Z
+Tools ΓÇó Dart 3.10.7 ΓÇó DevTools 2.51.1
+FINISHED

@@ -1,0 +1,12 @@
+node_modules/
+.env
+uploads/*
+!uploads/.gitkeep
+npm-debug.log*
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+*.log

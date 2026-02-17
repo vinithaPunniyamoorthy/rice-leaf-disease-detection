@@ -1,0 +1,10 @@
+﻿
+
+    Directory: C:\Program Files\Android\Android Studio
+
+
+Mode                 LastWriteTime         Length Name                                           
+----                 -------------         ------ ----                                           
+d-----         2/13/2026   5:59 PM                jbr                                            
+
+

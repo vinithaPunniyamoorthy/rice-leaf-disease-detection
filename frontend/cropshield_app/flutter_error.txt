@@ -1,0 +1,2 @@
+Error: could not open `C:\Program Files\Android\Android Studio\jbr\lib\jvm.cfg'
+Error: Gradle task assembleDebug failed with exit code 1

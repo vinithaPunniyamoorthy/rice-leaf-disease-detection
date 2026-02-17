@@ -1,0 +1,8 @@
+﻿java.exe : Error: could not open `C:\Program Files\Android\Android Studio\jbr\lib\jvm.cfg'
+At line:1 char:1
++ & "C:\Program Files\Android\Android Studio\jbr\bin\java.exe" -version ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Error: could no...br\lib\jvm.cfg':String) [], Remot 
+   eException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

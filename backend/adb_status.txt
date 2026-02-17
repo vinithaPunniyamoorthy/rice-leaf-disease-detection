@@ -1,0 +1,3 @@
+List of devices attached
+R58RB1S87GK	device
+

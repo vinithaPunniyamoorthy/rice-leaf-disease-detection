@@ -1,0 +1,12 @@
+﻿
+
+    Directory: 
+    C:\Users\vinit\.jdks
+
+
+Mode            LastWriteTime
+----            -------------
+d-----    8/18/2025   1:06 AM
+-a----    8/18/2025   1:06 AM
+
+
