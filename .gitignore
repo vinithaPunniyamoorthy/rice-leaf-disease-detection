@@ -31,5 +31,9 @@ frontend/cropshield_app/.flutter-plugins-dependencies
 .DS_Store
 Thumbs.db
 
+# JDK / Java binaries (too large for GitHub)
+backend/database/oracleJdk-25/
+*.jdk/
+
 # Misc
 *.log
