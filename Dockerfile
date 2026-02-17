@@ -8,8 +8,7 @@ COPY backend/package.json backend/package-lock.json ./
 # Install dependencies
 RUN npm install --production
 
-# Copy backend source code
-COPY backend/.env ./
+# Copy backend source code (env vars come from Railway Dashboard, not .env file)
 COPY backend/server.js ./
 COPY backend/src/ ./src/
 
