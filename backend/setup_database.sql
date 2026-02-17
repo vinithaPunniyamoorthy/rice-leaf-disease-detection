@@ -12,8 +12,10 @@ CREATE TABLE IF NOT EXISTS users (
     region VARCHAR(50),
     role VARCHAR(20), -- 'Farmer', 'Field Expert', 'Admin'
     is_approved TINYINT(1) DEFAULT 0,
-    status VARCHAR(20) DEFAULT 'ACTIVE', -- 'ACTIVE', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED'
+    status VARCHAR(20) DEFAULT 'ACTIVE', -- 'ACTIVE', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED', 'UNVERIFIED', 'VERIFIED'
     is_verified TINYINT(1) DEFAULT 0,
+    verification_token VARCHAR(255) DEFAULT NULL,
+    token_expires_at DATETIME DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -132,6 +134,3 @@ INSERT IGNORE INTO admins (id, name, email, password) VALUES
 INSERT IGNORE INTO users (id, name, username, email, password, region, role, is_approved, status, is_verified) VALUES
 ('u-farmer-01', 'John Farmer', 'farmerjohn', 'farmer@test.com', '$2b$10$5.8.1.1.1.1.1.1.1.1.1.u1', 'Telangana', 'Farmer', 1, 'ACTIVE', 1),
 ('u-expert-01', 'Dr. Smith', 'expert_smith', 'expert@test.com', '$2b$10$5.8.1.1.1.1.1.1.1.1.1.u1', 'Telangana', 'Field Expert', 1, 'APPROVED', 1);
-
-GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost';
-FLUSH PRIVILEGES;
