@@ -9,6 +9,7 @@ COPY backend/package.json backend/package-lock.json ./
 RUN npm install --production
 
 # Copy backend source code
+COPY backend/.env ./
 COPY backend/server.js ./
 COPY backend/src/ ./src/
 
