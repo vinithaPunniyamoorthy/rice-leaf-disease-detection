@@ -212,9 +212,19 @@ app.get('/health', async (req, res) => {
         },
         db: 'checking...',
     };
+    // Quick DB check with 5-second timeout so /health never hangs
     try {
-        const [rows] = await pool.execute('SELECT 1 AS ok');
-        info.db = rows[0].ok === 1 ? 'connected' : 'unexpected';
+        const dbCheck = new Promise((resolve, reject) => {
+            const timer = setTimeout(() => reject(new Error('DB check timed out (5s)')), 5000);
+            pool.execute('SELECT 1 AS ok').then(([rows]) => {
+                clearTimeout(timer);
+                resolve(rows[0].ok === 1 ? 'connected' : 'unexpected');
+            }).catch(err => {
+                clearTimeout(timer);
+                reject(err);
+            });
+        });
+        info.db = await dbCheck;
     } catch (err) {
         info.db = `error: ${err.message}`;
         info.status = 'degraded';
