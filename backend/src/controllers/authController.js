@@ -23,10 +23,25 @@ const hashToken = (token) => {
     return crypto.createHash('sha256').update(token).digest('hex');
 };
 
-/** Build the verification link from the env variable. */
-const buildLink = (rawToken, path = '/api/auth/verify-email') => {
-    const baseUrl = (process.env.BASE_URL || 'http://127.0.0.1:5000').trim();
-    return `${baseUrl.replace(/\/$/, '')}${path}?token=${rawToken}`;
+/** Build the verification link.
+ *  Uses BASE_URL env var, or auto-detects from request headers on Railway. */
+let _cachedBaseUrl = null;
+const getBaseUrl = (req) => {
+    if (_cachedBaseUrl) return _cachedBaseUrl;
+    const fromEnv = (process.env.BASE_URL || '').trim();
+    if (fromEnv) { _cachedBaseUrl = fromEnv.replace(/\/$/, ''); return _cachedBaseUrl; }
+    // Auto-detect from request (works on Railway / any reverse proxy)
+    if (req) {
+        const proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+        const host = req.headers['x-forwarded-host'] || req.headers['host'];
+        if (host) { _cachedBaseUrl = `${proto}://${host}`; return _cachedBaseUrl; }
+    }
+    return 'http://127.0.0.1:5000';
+};
+
+const buildLink = (rawToken, path = '/api/auth/verify-email', req = null) => {
+    const baseUrl = getBaseUrl(req);
+    return `${baseUrl}${path}?token=${rawToken}`;
 };
 
 // ─── POST /register ───────────────────────────────────────
@@ -68,12 +83,12 @@ exports.register = async (req, res) => {
             [userId, name, username, email, hashedPassword, role, region || null, 0, initialStatus, hashedToken, expiresAt]
         );
 
-        const link = buildLink(rawToken);
+        const link = buildLink(rawToken, '/api/auth/verify-email', req);
 
         if (role === 'Field Expert') {
             logToFile('Notifying Admin about new Field Expert...');
             // Build approval link that identifies the FIELD EXPERT (not the admin)
-            const approvalLink = buildLink(rawToken, '/api/auth/approve-expert-email');
+            const approvalLink = buildLink(rawToken, '/api/auth/approve-expert-email', req);
             let adminEmail = 'viniththap@gmail.com';
             try {
                 const [admins] = await pool.execute('SELECT email FROM admins WHERE id = "A001" LIMIT 1');
@@ -347,10 +362,10 @@ exports.resendVerificationEmail = async (req, res) => {
         );
 
         // 3. Build link and Resend
-        const link = buildLink(rawToken);
+        const link = buildLink(rawToken, '/api/auth/verify-email', req);
 
         if (user.role === 'Field Expert') {
-            const approvalLink = buildLink(rawToken, '/api/auth/approve-expert-email');
+            const approvalLink = buildLink(rawToken, '/api/auth/approve-expert-email', req);
             let adminEmail = 'viniththap@gmail.com';
             try {
                 const [admins] = await pool.execute('SELECT email FROM admins WHERE id = "A001" LIMIT 1');
@@ -461,7 +476,7 @@ exports.forgotPassword = async (req, res) => {
             [email, hashedToken, expiresAt]
         );
 
-        const resetLink = buildLink(rawToken, '/api/auth/reset-password-page');
+        const resetLink = buildLink(rawToken, '/api/auth/reset-password-page', req);
 
         // Use general sendVerificationLink logic for reset too or specific one
         await emailService.sendPasswordResetEmail(email, user.name, resetLink);
