@@ -189,26 +189,26 @@ app.get('/', (req, res) => {
 
 // Health-check endpoint — shows DB status and masked env config
 app.get('/health', async (req, res) => {
-    const envTrim = (k) => (process.env[k] || '').trim();
+    const e = (k) => (process.env[k] || '').trim();
     const info = {
         status: 'ok',
         timestamp: new Date().toISOString(),
         port: PORT,
         env: {
-            MYSQLHOST: envTrim('MYSQLHOST') ? `${envTrim('MYSQLHOST').substring(0, 12)}...` : 'NOT SET',
-            MYSQLUSER: envTrim('MYSQLUSER') || 'NOT SET',
-            MYSQLDATABASE: envTrim('MYSQLDATABASE') || 'NOT SET',
-            MYSQLPORT: envTrim('MYSQLPORT') || 'NOT SET',
-            MYSQL_URL: envTrim('MYSQL_URL') ? 'SET' : 'NOT SET',
-            DATABASE_URL: envTrim('DATABASE_URL') ? 'SET' : 'NOT SET',
-            DB_HOST: envTrim('DB_HOST') || 'NOT SET',
-            DB_USER: envTrim('DB_USER') || 'NOT SET',
-            DB_NAME: envTrim('DB_NAME') || 'NOT SET',
-            DB_PORT: envTrim('DB_PORT') || 'NOT SET',
-            BASE_URL: envTrim('BASE_URL') || 'NOT SET',
-            JWT_SECRET: envTrim('JWT_SECRET') ? 'SET' : 'NOT SET',
-            GMAIL_USER: envTrim('GMAIL_USER') || 'NOT SET',
-            GMAIL_PASS: envTrim('GMAIL_PASS') ? 'SET' : 'NOT SET',
+            MYSQLHOST: e('MYSQLHOST') ? `${e('MYSQLHOST').substring(0, 12)}...` : 'NOT SET',
+            MYSQLUSER: e('MYSQLUSER') || 'NOT SET',
+            MYSQLDATABASE: e('MYSQLDATABASE') || 'NOT SET',
+            MYSQLPORT: e('MYSQLPORT') || 'NOT SET',
+            MYSQL_URL: e('MYSQL_URL') ? 'SET' : 'NOT SET',
+            DATABASE_URL: e('DATABASE_URL') ? 'SET' : 'NOT SET',
+            DB_HOST: e('DB_HOST') ? `${e('DB_HOST').substring(0, 12)}...` : 'NOT SET',
+            DB_USER: e('DB_USER') || 'NOT SET',
+            DB_NAME: e('DB_NAME') || 'NOT SET',
+            DB_PORT: e('DB_PORT') || 'NOT SET',
+            BASE_URL: e('BASE_URL') || 'NOT SET',
+            JWT_SECRET: e('JWT_SECRET') ? 'SET' : 'NOT SET',
+            GMAIL_USER: e('GMAIL_USER') || 'NOT SET',
+            GMAIL_PASS: e('GMAIL_PASS') ? 'SET' : 'NOT SET',
         },
         db: 'checking...',
     };
