@@ -25,7 +25,7 @@ const hashToken = (token) => {
 
 /** Build the verification link from the env variable. */
 const buildLink = (rawToken, path = '/api/auth/verify-email') => {
-    const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:5000';
+    const baseUrl = (process.env.BASE_URL || 'http://127.0.0.1:5000').trim();
     return `${baseUrl.replace(/\/$/, '')}${path}?token=${rawToken}`;
 };
 

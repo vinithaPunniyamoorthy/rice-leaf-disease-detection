@@ -1,16 +1,19 @@
 const mysql = require('mysql2');
 require('dotenv').config();
 
+// Helper: trim whitespace/newlines from env vars (common Railway dashboard paste issue)
+const env = (key) => (process.env[key] || '').trim() || null;
+
 // Railway auto-injects MYSQL* vars when a MySQL service is linked.
 // Prioritize those over local .env DB_* vars so Railway works out of the box.
-const host     = process.env.MYSQLHOST     || process.env.DB_HOST     || 'localhost';
-const user     = process.env.MYSQLUSER     || process.env.DB_USER     || 'root';
-const password = process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || '';
-const database = process.env.MYSQLDATABASE || process.env.DB_NAME     || 'cropshield_db';
-const port     = parseInt(process.env.MYSQLPORT || process.env.DB_PORT || '3306');
+const host     = env('MYSQLHOST')     || env('DB_HOST')     || 'localhost';
+const user     = env('MYSQLUSER')     || env('DB_USER')     || 'root';
+const password = env('MYSQLPASSWORD') || env('DB_PASSWORD') || '';
+const database = env('MYSQLDATABASE') || env('DB_NAME')     || 'cropshield_db';
+const port     = parseInt(env('MYSQLPORT') || env('DB_PORT') || '3306');
 
 // Also support MYSQL_URL / DATABASE_URL connection string (Railway provides this too)
-const connectionUrl = process.env.MYSQL_URL || process.env.DATABASE_URL || null;
+const connectionUrl = env('MYSQL_URL') || env('DATABASE_URL');
 
 let pool;
 if (connectionUrl && connectionUrl.startsWith('mysql://')) {
