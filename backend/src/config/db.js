@@ -30,7 +30,7 @@ if (connectionUrl && connectionUrl.startsWith('mysql://')) {
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    connectTimeout: 10000,
+    connectTimeout: 5000,
   });
 }
 
