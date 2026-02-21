@@ -264,8 +264,13 @@ app.use((err, req, res, next) => {
 });
 
 // SPA fallback — serve Flutter index.html for any non-API route
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.use((req, res, next) => {
+    // Only handle GET requests for non-API paths
+    if (req.method === 'GET' && !req.path.startsWith('/api/') && !req.path.startsWith('/health') && !req.path.startsWith('/uploads/')) {
+        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    } else {
+        next();
+    }
 });
 
 
