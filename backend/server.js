@@ -27,6 +27,15 @@ const PORT = process.env.PORT || 5000;
 
 logToFile('Modules loaded.');
 
+// Wait for DB connection before initializing tables
+async function startApp() {
+  // Wait for db.js to find a working connection
+  if (pool.dbReady) {
+    try { await pool.dbReady; } catch (_) {}
+  }
+  await initDatabase();
+}
+
 // Auto-create tables on startup (safe for Railway fresh MySQL)
 async function initDatabase() {
     try {
@@ -165,7 +174,7 @@ async function initDatabase() {
     }
 }
 
-initDatabase();
+startApp();
 
 try {
     logToFile(`Environment: PORT=${PORT}, DB_HOST=${process.env.DB_HOST}`);
