@@ -1,0 +1,2 @@
+STATUS:200
+{"status":"degraded","timestamp":"2026-02-21T11:26:22.046Z","port":"5000","env":{"MYSQL_URL":"NOT SET","MYSQL_PRIVATE_URL":"NOT SET","DATABASE_URL":"NOT SET","MYSQLHOST":"NOT SET","MYSQLUSER":"NOT SET","MYSQLPASSWORD":"NOT SET","MYSQLDATABASE":"NOT SET","MYSQLPORT":"NOT SET","DB_HOST":"db-12345-railway-mysql.up.railway.app","DB_USER":"root","DB_PASSWORD":"SET","DB_NAME":"cropshield_db","DB_PORT":"NOT SET","JWT_SECRET":"SET","GMAIL_USER":"pvinitha224@gmail.com","GMAIL_PASS":"SET"},"db":"error: DB check timed out after 10s"}

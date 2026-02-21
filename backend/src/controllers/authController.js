@@ -95,7 +95,10 @@ exports.register = async (req, res) => {
                 if (admins.length > 0) adminEmail = admins[0].email;
             } catch (err) { console.error('Error fetching admin email:', err); }
 
-            await emailService.sendApprovalRequestToAdmin(adminEmail, { name, email, region }, approvalLink);
+            // Fire-and-forget — don't block response on email
+            emailService.sendApprovalRequestToAdmin(adminEmail, { name, email, region }, approvalLink)
+                .then(ok => logToFile(`Admin approval email ${ok ? 'sent' : 'failed'}`))
+                .catch(err => logToFile(`Admin approval email error: ${err.message}`));
 
             return res.status(201).json({
                 message: 'Registration submitted! Your account is pending admin approval. You will be notified via email once approved.',
@@ -103,8 +106,11 @@ exports.register = async (req, res) => {
             });
         } else {
             logToFile('Sending verification link to Farmer...');
-            await emailService.sendVerificationLink(email, link, name);
-            logToFile('Verification link sent.');
+            // Fire-and-forget — don't block response on email
+            emailService.sendVerificationLink(email, link, name)
+                .then(ok => logToFile(`Verification email ${ok ? 'sent' : 'failed'} for ${email}`))
+                .catch(err => logToFile(`Verification email error: ${err.message}`));
+            logToFile('Registration response sent (email sending in background).');
 
             return res.status(201).json({
                 message: 'Registration successful! Please check your email and click the verification link to activate your account.',
