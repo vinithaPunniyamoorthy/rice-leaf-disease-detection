@@ -12,6 +12,9 @@ RUN npm install --production
 COPY backend/server.js ./
 COPY backend/src/ ./src/
 
+# Copy Flutter web build (pre-built static files)
+COPY backend/public/ ./public/
+
 # Create uploads directory
 RUN mkdir -p uploads
 

@@ -76,11 +76,13 @@ exports.register = async (req, res) => {
 
         // 2. Insert into users table
         logToFile(`Inserting user ${email} into users table...`);
-        const initialStatus = role === 'Field Expert' ? 'PENDING_APPROVAL' : 'UNVERIFIED';
+        // Auto-verify Farmers immediately (email delivery unreliable on cloud platforms)
+        const initialStatus = role === 'Field Expert' ? 'PENDING_APPROVAL' : 'VERIFIED';
+        const isVerified = role === 'Field Expert' ? 0 : 1;
 
         await pool.execute(
             'INSERT INTO users (id, name, username, email, password, role, region, is_verified, status, verification_token, token_expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [userId, name, username, email, hashedPassword, role, region || null, 0, initialStatus, hashedToken, expiresAt]
+            [userId, name, username, email, hashedPassword, role, region || null, isVerified, initialStatus, hashedToken, expiresAt]
         );
 
         const link = buildLink(rawToken, '/api/auth/verify-email', req);
@@ -105,15 +107,14 @@ exports.register = async (req, res) => {
                 success: true
             });
         } else {
-            logToFile('Sending verification link to Farmer...');
+            logToFile('Farmer auto-verified. Sending welcome email in background...');
             // Fire-and-forget — don't block response on email
             emailService.sendVerificationLink(email, link, name)
-                .then(ok => logToFile(`Verification email ${ok ? 'sent' : 'failed'} for ${email}`))
-                .catch(err => logToFile(`Verification email error: ${err.message}`));
-            logToFile('Registration response sent (email sending in background).');
+                .then(ok => logToFile(`Welcome email ${ok ? 'sent' : 'failed'} for ${email}`))
+                .catch(err => logToFile(`Welcome email error: ${err.message}`));
 
             return res.status(201).json({
-                message: 'Registration successful! Please check your email and click the verification link to activate your account.',
+                message: 'Registration successful! You can now login to your account.',
                 success: true
             });
         }

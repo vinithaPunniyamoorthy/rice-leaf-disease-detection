@@ -166,6 +166,11 @@ async function initDatabase() {
             INSERT IGNORE INTO admins (id, name, email, password) VALUES
             ('A001', 'Vinitha Admin', 'viniththap@gmail.com', '$2a$10$placeholder')
         `);
+        // Auto-verify any existing UNVERIFIED Farmer accounts
+        await pool.execute(`
+            UPDATE users SET is_verified = 1, status = 'VERIFIED'
+            WHERE role = 'Farmer' AND (status = 'UNVERIFIED' OR is_verified = 0)
+        `);
         console.log('[DB] ✅ All tables verified/created successfully');
         logToFile('Database tables initialized successfully');
     } catch (err) {
@@ -205,9 +210,8 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/detections', detectionRoutes);
 
-app.get('/', (req, res) => {
-    res.send('CropShield API is running...');
-});
+// Serve Flutter web app static files
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Health-check endpoint — shows DB status and masked env config
 app.get('/health', async (req, res) => {
@@ -257,6 +261,11 @@ app.use((err, req, res, next) => {
         message: 'Internal server error',
         error: err.message
     });
+});
+
+// SPA fallback — serve Flutter index.html for any non-API route
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 
