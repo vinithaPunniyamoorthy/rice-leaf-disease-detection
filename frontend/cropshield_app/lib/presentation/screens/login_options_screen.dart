@@ -14,25 +14,28 @@ class LoginOptionsScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.shield,
-              size: 80,
-              color: AppColors.primary,
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withOpacity(0.1),
+              ),
+              child: Image.asset('assets/images/logo.png', height: 120),
             ),
             const SizedBox(height: 16),
             Text(
               'CropShield',
-              style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                    color: AppColors.primary,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.displayLarge?.copyWith(color: AppColors.primary),
             ),
             const SizedBox(height: 32),
             Text(
               'Protect your crops with AI-powered disease detection and professional expert advice.',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Colors.grey[700],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: Colors.grey[700]),
             ),
             const SizedBox(height: 60),
             ElevatedButton(

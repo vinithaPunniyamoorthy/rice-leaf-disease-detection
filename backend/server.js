@@ -166,11 +166,7 @@ async function initDatabase() {
             INSERT IGNORE INTO admins (id, name, email, password) VALUES
             ('A001', 'Vinitha Admin', 'viniththap@gmail.com', '$2a$10$placeholder')
         `);
-        // Auto-verify any existing UNVERIFIED Farmer accounts
-        await pool.execute(`
-            UPDATE users SET is_verified = 1, status = 'VERIFIED'
-            WHERE role = 'Farmer' AND (status = 'UNVERIFIED' OR is_verified = 0)
-        `);
+
         console.log('[DB] ✅ All tables verified/created successfully');
         logToFile('Database tables initialized successfully');
     } catch (err) {

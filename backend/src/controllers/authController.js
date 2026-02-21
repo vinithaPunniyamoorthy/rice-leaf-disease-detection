@@ -76,9 +76,9 @@ exports.register = async (req, res) => {
 
         // 2. Insert into users table
         logToFile(`Inserting user ${email} into users table...`);
-        // Auto-verify Farmers immediately (email delivery unreliable on cloud platforms)
-        const initialStatus = role === 'Field Expert' ? 'PENDING_APPROVAL' : 'VERIFIED';
-        const isVerified = role === 'Field Expert' ? 0 : 1;
+        // Farmers must verify email before login; Field Experts need admin approval
+        const initialStatus = role === 'Field Expert' ? 'PENDING_APPROVAL' : 'UNVERIFIED';
+        const isVerified = 0;
 
         await pool.execute(
             'INSERT INTO users (id, name, username, email, password, role, region, is_verified, status, verification_token, token_expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -107,14 +107,14 @@ exports.register = async (req, res) => {
                 success: true
             });
         } else {
-            logToFile('Farmer auto-verified. Sending welcome email in background...');
+            logToFile('Sending verification email to Farmer...');
             // Fire-and-forget — don't block response on email
             emailService.sendVerificationLink(email, link, name)
-                .then(ok => logToFile(`Welcome email ${ok ? 'sent' : 'failed'} for ${email}`))
-                .catch(err => logToFile(`Welcome email error: ${err.message}`));
+                .then(ok => logToFile(`Verification email ${ok ? 'sent' : 'failed'} for ${email}`))
+                .catch(err => logToFile(`Verification email error: ${err.message}`));
 
             return res.status(201).json({
-                message: 'Registration successful! You can now login to your account.',
+                message: 'Registration successful! Please check your email to verify your account before logging in.',
                 success: true
             });
         }
