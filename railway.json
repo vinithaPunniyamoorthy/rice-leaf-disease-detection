@@ -4,7 +4,7 @@
     "dockerfilePath": "Dockerfile"
   },
   "deploy": {
-    "startCommand": "node server.js",
+    "startCommand": "MYSQL_URL='mysql://root:wNWbjMnBsZKjTxKDyySvmeTPXTYatNoL@mysql.railway.internal:3306/railway' node server.js",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
