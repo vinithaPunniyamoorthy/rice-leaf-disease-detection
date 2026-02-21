@@ -22,11 +22,11 @@ function makePool(config) {
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    connectTimeout: 10000,
+    connectTimeout: 15000,
   });
 }
 
-// Shared pool reference — updated when a working connection is found
+// Shared pool reference
 let activePool = null;
 
 async function tryConnect(label, config) {
@@ -46,7 +46,7 @@ async function tryConnect(label, config) {
 async function initConnection() {
   console.log(`[DB] isRailway=${isRailway}, host=${host}, port=${port}, db=${database}`);
 
-  // Strategy 1: MYSQL_URL
+  // Strategy 1: MYSQL_URL env var
   if (connectionUrl && connectionUrl.startsWith('mysql://')) {
     try {
       const u = new URL(connectionUrl);
@@ -55,39 +55,46 @@ async function initConnection() {
     if (await tryConnect('MYSQL_URL', { uri: connectionUrl })) return;
   }
 
-  // Strategy 2: Individual env vars (correct db name for Railway)
+  // Strategy 2: Individual env vars
   const dbName = (isRailway && database === 'cropshield_db') ? 'railway' : database;
   console.log(`[DB] S2: ${host}:${port} db=${dbName}`);
   if (await tryConnect('EnvVars', { host, user, password, database: dbName, port })) return;
 
-  // Strategy 3: Railway fallbacks
+  // Strategy 3: Railway-specific fallbacks
   if (isRailway) {
-    const strategies = [
+    const fallbackConfigs = [
+      // Try Railway internal hostname
       { label: 'Railway-internal', host: 'mysql.railway.internal', port: 3306, database: 'railway', user, password },
+      // Try Railway public proxy
       { label: 'Railway-proxy', host: 'mainline.proxy.rlwy.net', port: 20054, database: 'railway', user, password },
-      { label: 'Railway-host-fix', host, port: 20054, database: 'railway', user, password },
+      // Try known Railway MySQL URL (hardcoded fallback for this project)
+      { label: 'Railway-direct', uri: 'mysql://root:wNWbjMnBsZKjTxKDyySvmeTPXTYatNoL@mysql.railway.internal:3306/railway' },
+      { label: 'Railway-public', uri: 'mysql://root:wNWbjMnBsZKjTxKDyySvmeTPXTYatNoL@mainline.proxy.rlwy.net:20054/railway' },
     ];
-    for (const s of strategies) {
-      console.log(`[DB] S3: ${s.label} → ${s.host}:${s.port}`);
-      if (await tryConnect(s.label, { host: s.host, port: s.port, database: s.database, user: s.user, password: s.password })) return;
+    for (const s of fallbackConfigs) {
+      console.log(`[DB] S3: ${s.label}`);
+      const config = s.uri ? { uri: s.uri } : { host: s.host, port: s.port, database: s.database, user: s.user, password: s.password };
+      if (await tryConnect(s.label, config)) return;
     }
   }
 
-  console.error('[DB] ❌ ALL strategies failed. Set MYSQL_URL on Railway backend Variables.');
+  console.error('[DB] ❌ ALL strategies failed!');
 }
 
-// Create initial pool synchronously (so require() works immediately)
+// Create initial sync pool
 if (connectionUrl && connectionUrl.startsWith('mysql://')) {
   activePool = makePool({ uri: connectionUrl });
+} else if (isRailway) {
+  // On Railway, default to internal hostname
+  activePool = makePool({ uri: 'mysql://root:wNWbjMnBsZKjTxKDyySvmeTPXTYatNoL@mysql.railway.internal:3306/railway' });
 } else {
-  const dbName = (isRailway && database === 'cropshield_db') ? 'railway' : database;
-  activePool = makePool({ host, user, password, database: dbName, port });
+  activePool = makePool({ host, user, password, database, port });
 }
 
-// Run async init to find best connection (replaces activePool if better found)
+// Run async init to find best working connection
 const dbReady = initConnection().catch(err => console.error('[DB] Init error:', err.message));
 
-// Proxy module: always delegates to activePool (updated by initConnection)
+// Proxy: always delegates to activePool
 const handler = {
   get(_, prop) {
     if (!activePool) throw new Error('Database pool not initialized');
