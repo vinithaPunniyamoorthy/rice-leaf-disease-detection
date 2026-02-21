@@ -3,66 +3,94 @@ require('dotenv').config();
 
 const env = (key) => (process.env[key] || '').trim() || null;
 
-// Railway injects MYSQL_URL, MYSQL_PRIVATE_URL, DATABASE_URL, or individual MYSQL* vars
+// Detect Railway environment
+const isRailway = !!(env('RAILWAY_ENVIRONMENT') || env('RAILWAY_SERVICE_NAME') || 
+  (env('DB_HOST') && env('DB_HOST').includes('railway')));
+
+// Connection URL takes priority (MYSQL_URL, MYSQL_PRIVATE_URL, DATABASE_URL)
 const connectionUrl = env('MYSQL_URL') || env('MYSQL_PRIVATE_URL') || env('DATABASE_URL');
 
 const host     = env('MYSQLHOST')     || env('DB_HOST')     || 'localhost';
 const user     = env('MYSQLUSER')     || env('DB_USER')     || 'root';
 const password = env('MYSQLPASSWORD') || env('DB_PASSWORD') || '';
-const database = env('MYSQLDATABASE') || env('DB_NAME')     || 'railway';
+const database = env('MYSQLDATABASE') || env('DB_NAME')     || (isRailway ? 'railway' : 'cropshield_db');
 const port     = parseInt(env('MYSQLPORT') || env('DB_PORT') || '3306');
 
-let pool;
-if (connectionUrl && connectionUrl.startsWith('mysql://')) {
-  // Parse URL to log host info (mask password)
-  try {
-    const u = new URL(connectionUrl);
-    console.log(`[DB] Using connection URL → ${u.hostname}:${u.port || 3306} (db: ${u.pathname.slice(1)}, user: ${u.username})`);
-  } catch (_) {
-    console.log(`[DB] Using connection URL (MYSQL_URL)`);
-  }
-  pool = mysql.createPool({
-    uri: connectionUrl,
+function makePool(config) {
+  return mysql.createPool({
+    ...config,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    connectTimeout: 30000,
-  });
-} else {
-  console.log(`[DB] Connecting to MySQL at ${host}:${port} (db: ${database}, user: ${user})`);
-  pool = mysql.createPool({
-    host,
-    user,
-    password,
-    database,
-    port,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-    connectTimeout: 30000,
+    connectTimeout: 15000,
   });
 }
 
-// Test connection on startup with retry
-async function testConnection(retries = 3) {
-  for (let i = 1; i <= retries; i++) {
+let pool;
+
+async function initConnection() {
+  // Strategy 1: MYSQL_URL connection string
+  if (connectionUrl && connectionUrl.startsWith('mysql://')) {
+    try {
+      const u = new URL(connectionUrl);
+      console.log(`[DB] Try MYSQL_URL: ${u.hostname}:${u.port || 3306} db=${u.pathname.slice(1)}`);
+    } catch (_) { console.log('[DB] Try MYSQL_URL'); }
+    pool = makePool({ uri: connectionUrl });
     try {
       await pool.promise().execute('SELECT 1');
-      console.log('[DB] ✅ Database connection verified successfully');
-      return;
+      console.log('[DB] ✅ Connected via MYSQL_URL');
+      return pool.promise();
     } catch (err) {
-      console.error(`[DB] ❌ Connection attempt ${i}/${retries} FAILED: ${err.message}`);
-      if (i < retries) {
-        console.log(`[DB] Retrying in ${i * 2}s...`);
-        await new Promise(r => setTimeout(r, i * 2000));
+      console.error('[DB] ❌ MYSQL_URL failed:', err.message);
+    }
+  }
+
+  // Strategy 2: Individual env vars
+  const dbName = (isRailway && database === 'cropshield_db') ? 'railway' : database;
+  console.log(`[DB] Try env vars: ${host}:${port} db=${dbName} user=${user} isRailway=${isRailway}`);
+  pool = makePool({ host, user, password, database: dbName, port });
+  try {
+    await pool.promise().execute('SELECT 1');
+    console.log('[DB] ✅ Connected via env vars');
+    return pool.promise();
+  } catch (err) {
+    console.error('[DB] ❌ Env vars failed:', err.message);
+  }
+
+  // Strategy 3: Railway internal hostname (when both services in same project)
+  if (isRailway) {
+    const fallbacks = [
+      { host: 'mysql.railway.internal', port: 3306, database: 'railway', user, password },
+      { host: host, port: 3306, database: 'railway', user, password },
+    ];
+    for (const cfg of fallbacks) {
+      console.log(`[DB] Try fallback: ${cfg.host}:${cfg.port} db=${cfg.database}`);
+      pool = makePool(cfg);
+      try {
+        await pool.promise().execute('SELECT 1');
+        console.log(`[DB] ✅ Connected via ${cfg.host}`);
+        return pool.promise();
+      } catch (err) {
+        console.error(`[DB] ❌ ${cfg.host} failed:`, err.message);
       }
     }
   }
-  console.error('[DB] ❌ All connection attempts failed.');
-  console.error('[DB] ❌ Env check: MYSQL_URL=' + (env('MYSQL_URL') ? 'SET' : 'NOT SET') +
-    ', MYSQLHOST=' + (env('MYSQLHOST') || 'NOT SET') +
-    ', DB_HOST=' + (env('DB_HOST') || 'NOT SET'));
+
+  console.error('[DB] ❌ ALL connection strategies failed!');
+  console.error('[DB] ❌ Add MYSQL_URL to backend Variables in Railway dashboard');
+  return pool.promise();
 }
-testConnection();
+
+const dbReady = initConnection();
+
+// Export a promise-based pool that works immediately for require()
+// The pool variable is set synchronously for first strategy, async for fallbacks
+if (connectionUrl && connectionUrl.startsWith('mysql://')) {
+  pool = makePool({ uri: connectionUrl });
+} else {
+  const dbName = (isRailway && database === 'cropshield_db') ? 'railway' : database;
+  pool = makePool({ host, user, password, database: dbName, port });
+}
 
 module.exports = pool.promise();
+module.exports.dbReady = dbReady;
