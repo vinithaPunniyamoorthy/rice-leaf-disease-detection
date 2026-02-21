@@ -203,22 +203,25 @@ app.get('/', (req, res) => {
 // Health-check endpoint — shows DB status and masked env config
 app.get('/health', async (req, res) => {
     const e = (k) => (process.env[k] || '').trim();
+    const mask = (v) => v ? (v.length > 8 ? v.substring(0, 4) + '****' : '****') : 'NOT SET';
     const info = {
         status: 'ok',
         timestamp: new Date().toISOString(),
         port: PORT,
         env: {
-            MYSQLHOST: e('MYSQLHOST') ? `${e('MYSQLHOST').substring(0, 12)}...` : 'NOT SET',
+            MYSQL_URL: e('MYSQL_URL') ? 'SET' : 'NOT SET',
+            MYSQL_PRIVATE_URL: e('MYSQL_PRIVATE_URL') ? 'SET' : 'NOT SET',
+            DATABASE_URL: e('DATABASE_URL') ? 'SET' : 'NOT SET',
+            MYSQLHOST: e('MYSQLHOST') || 'NOT SET',
             MYSQLUSER: e('MYSQLUSER') || 'NOT SET',
+            MYSQLPASSWORD: e('MYSQLPASSWORD') ? 'SET' : 'NOT SET',
             MYSQLDATABASE: e('MYSQLDATABASE') || 'NOT SET',
             MYSQLPORT: e('MYSQLPORT') || 'NOT SET',
-            MYSQL_URL: e('MYSQL_URL') ? 'SET' : 'NOT SET',
-            DATABASE_URL: e('DATABASE_URL') ? 'SET' : 'NOT SET',
-            DB_HOST: e('DB_HOST') ? `${e('DB_HOST').substring(0, 12)}...` : 'NOT SET',
+            DB_HOST: e('DB_HOST') || 'NOT SET',
             DB_USER: e('DB_USER') || 'NOT SET',
+            DB_PASSWORD: e('DB_PASSWORD') ? 'SET' : 'NOT SET',
             DB_NAME: e('DB_NAME') || 'NOT SET',
             DB_PORT: e('DB_PORT') || 'NOT SET',
-            BASE_URL: e('BASE_URL') || 'NOT SET',
             JWT_SECRET: e('JWT_SECRET') ? 'SET' : 'NOT SET',
             GMAIL_USER: e('GMAIL_USER') || 'NOT SET',
             GMAIL_PASS: e('GMAIL_PASS') ? 'SET' : 'NOT SET',
@@ -226,9 +229,9 @@ app.get('/health', async (req, res) => {
         db: 'checking...',
     };
     try {
-        // Race the DB check against a 5-second timeout
+        // Race the DB check against a 10-second timeout
         const dbCheck = pool.execute('SELECT 1 AS ok');
-        const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('DB check timed out after 5s')), 5000));
+        const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('DB check timed out after 10s')), 10000));
         const [rows] = await Promise.race([dbCheck, timeout]);
         info.db = rows[0].ok === 1 ? 'connected' : 'unexpected';
     } catch (err) {

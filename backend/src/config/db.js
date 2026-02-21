@@ -1,24 +1,33 @@
 const mysql = require('mysql2');
 require('dotenv').config();
 
-// Helper: trim whitespace/newlines from env vars (common Railway dashboard paste issue)
 const env = (key) => (process.env[key] || '').trim() || null;
 
-// Railway auto-injects MYSQL* vars when a MySQL service is linked.
-// Prioritize those over local .env DB_* vars so Railway works out of the box.
+// Railway injects MYSQL_URL, MYSQL_PRIVATE_URL, DATABASE_URL, or individual MYSQL* vars
+const connectionUrl = env('MYSQL_URL') || env('MYSQL_PRIVATE_URL') || env('DATABASE_URL');
+
 const host     = env('MYSQLHOST')     || env('DB_HOST')     || 'localhost';
 const user     = env('MYSQLUSER')     || env('DB_USER')     || 'root';
 const password = env('MYSQLPASSWORD') || env('DB_PASSWORD') || '';
-const database = env('MYSQLDATABASE') || env('DB_NAME')     || 'cropshield_db';
+const database = env('MYSQLDATABASE') || env('DB_NAME')     || 'railway';
 const port     = parseInt(env('MYSQLPORT') || env('DB_PORT') || '3306');
-
-// Also support MYSQL_URL / DATABASE_URL connection string (Railway provides this too)
-const connectionUrl = env('MYSQL_URL') || env('DATABASE_URL');
 
 let pool;
 if (connectionUrl && connectionUrl.startsWith('mysql://')) {
-  console.log(`[DB] Using connection URL (MYSQL_URL)`);
-  pool = mysql.createPool(connectionUrl);
+  // Parse URL to log host info (mask password)
+  try {
+    const u = new URL(connectionUrl);
+    console.log(`[DB] Using connection URL → ${u.hostname}:${u.port || 3306} (db: ${u.pathname.slice(1)}, user: ${u.username})`);
+  } catch (_) {
+    console.log(`[DB] Using connection URL (MYSQL_URL)`);
+  }
+  pool = mysql.createPool({
+    uri: connectionUrl,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    connectTimeout: 30000,
+  });
 } else {
   console.log(`[DB] Connecting to MySQL at ${host}:${port} (db: ${database}, user: ${user})`);
   pool = mysql.createPool({
@@ -34,13 +43,26 @@ if (connectionUrl && connectionUrl.startsWith('mysql://')) {
   });
 }
 
-// Test connection on startup
-pool.promise().execute('SELECT 1').then(() => {
-  console.log('[DB] ✅ Database connection verified successfully');
-}).catch((err) => {
-  console.error('[DB] ❌ Database connection FAILED:', err.message);
-  console.error('[DB] ❌ Check that MYSQLHOST, MYSQLUSER, MYSQLPASSWORD, MYSQLDATABASE, MYSQLPORT are set correctly');
-  console.error('[DB] Current config: host=' + host + ' port=' + port + ' user=' + user + ' db=' + database);
-});
+// Test connection on startup with retry
+async function testConnection(retries = 3) {
+  for (let i = 1; i <= retries; i++) {
+    try {
+      await pool.promise().execute('SELECT 1');
+      console.log('[DB] ✅ Database connection verified successfully');
+      return;
+    } catch (err) {
+      console.error(`[DB] ❌ Connection attempt ${i}/${retries} FAILED: ${err.message}`);
+      if (i < retries) {
+        console.log(`[DB] Retrying in ${i * 2}s...`);
+        await new Promise(r => setTimeout(r, i * 2000));
+      }
+    }
+  }
+  console.error('[DB] ❌ All connection attempts failed.');
+  console.error('[DB] ❌ Env check: MYSQL_URL=' + (env('MYSQL_URL') ? 'SET' : 'NOT SET') +
+    ', MYSQLHOST=' + (env('MYSQLHOST') || 'NOT SET') +
+    ', DB_HOST=' + (env('DB_HOST') || 'NOT SET'));
+}
+testConnection();
 
 module.exports = pool.promise();
