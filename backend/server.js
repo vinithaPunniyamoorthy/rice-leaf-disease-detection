@@ -54,9 +54,14 @@ async function initDatabase() {
                 id VARCHAR(50) PRIMARY KEY,
                 name VARCHAR(100),
                 email VARCHAR(100) UNIQUE,
-                password VARCHAR(255)
+                password VARCHAR(255),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
+        // Migration: add password column if missing (existing table)
+        try {
+            await pool.execute(`ALTER TABLE admins ADD COLUMN password VARCHAR(255) NOT NULL DEFAULT '' AFTER email`);
+        } catch (_) { /* column already exists */ }
         await pool.execute(`
             CREATE TABLE IF NOT EXISTS password_resets (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -70,9 +75,17 @@ async function initDatabase() {
             CREATE TABLE IF NOT EXISTS diseases (
                 DiseaseID VARCHAR(50) PRIMARY KEY,
                 DiseaseName VARCHAR(100),
-                Description TEXT
+                Description TEXT,
+                symptoms TEXT,
+                treatment TEXT,
+                prevention TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
+        // Migration: add Description column if missing (existing table)
+        try {
+            await pool.execute(`ALTER TABLE diseases ADD COLUMN Description TEXT NULL AFTER DiseaseName`);
+        } catch (_) { /* column already exists */ }
         await pool.execute(`
             CREATE TABLE IF NOT EXISTS images (
                 ImageID VARCHAR(50) PRIMARY KEY,
