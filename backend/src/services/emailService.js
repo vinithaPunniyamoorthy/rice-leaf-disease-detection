@@ -19,7 +19,10 @@ const transporter = nodemailer.createTransport({
  */
 async function sendMailWithTimeout(mailOptions, timeoutMs = 15000) {
     if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
-        console.log('⚠️ GMAIL credentials not set — skipping email send');
+        const msg = '🔴 CRITICAL: GMAIL_USER or GMAIL_PASS environment variable not set — emails CANNOT be sent. Configure these variables in Railway.';
+        console.error(msg);
+        console.error('Current env: GMAIL_USER=' + (process.env.GMAIL_USER ? 'SET' : 'NOT_SET') + ', GMAIL_PASS=' + (process.env.GMAIL_PASS ? 'SET' : 'NOT_SET'));
+        console.error('Recipient email: ' + (mailOptions?.to || 'UNKNOWN'));
         return false;
     }
     try {
