@@ -1,30 +1,48 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-// Initialize Nodemailer Transporter with timeouts
+// Initialize Nodemailer Transporter with timeouts and configurable SMTP settings
+const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+const smtpPort = parseInt(process.env.SMTP_PORT || '465');
+const smtpSecure = process.env.SMTP_SECURE ? process.env.SMTP_SECURE === 'true' : (smtpPort === 465);
+const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER;
+const smtpPass = process.env.SMTP_PASS || process.env.GMAIL_PASS;
+const mailFromAddress = process.env.MAIL_FROM || smtpUser || 'noreply@cropshield.app';
+
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: smtpHost,
+    port: smtpPort,
+    secure: smtpSecure,
     auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS
+        user: smtpUser,
+        pass: smtpPass
     },
     connectionTimeout: 10000,  // 10s to establish connection
     greetingTimeout: 10000,    // 10s for SMTP greeting
     socketTimeout: 15000       // 15s for socket inactivity
 });
 
+// log transporter configuration (avoid exposing credentials)
+console.log(`[EMAIL] SMTP transporter configured host=${smtpHost} port=${smtpPort} secure=${smtpSecure}`);
+
+// verify SMTP connection at startup
+transporter.verify()
+    .then(() => console.log('[EMAIL] SMTP connection verified'))
+    .catch(err => console.error('[EMAIL] SMTP verify failed:', err.message));
+
 /**
  * Send mail with a hard timeout wrapper to prevent hanging.
  * Returns true on success, false on failure (never throws).
  */
 async function sendMailWithTimeout(mailOptions, timeoutMs = 15000) {
-    if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
-        const msg = '🔴 CRITICAL: GMAIL_USER or GMAIL_PASS environment variable not set — emails CANNOT be sent. Configure these variables in Railway.';
+    if (!smtpUser || !smtpPass) {
+        const msg = '🔴 CRITICAL: SMTP_USER or SMTP_PASS (or GMAIL credentials) not set — emails CANNOT be sent. Configure these variables in Railway.';
         console.error(msg);
-        console.error('Current env: GMAIL_USER=' + (process.env.GMAIL_USER ? 'SET' : 'NOT_SET') + ', GMAIL_PASS=' + (process.env.GMAIL_PASS ? 'SET' : 'NOT_SET'));
-        console.error('Recipient email: ' + (mailOptions?.to || 'UNKNOWN'));
+        console.error(`Current env: smtpUser=${smtpUser ? 'SET' : 'NOT_SET'}, smtpPass=${smtpPass ? 'SET' : 'NOT_SET'}`);
+        console.error('Recipient email:', mailOptions?.to || 'UNKNOWN');
         return false;
     }
+    console.log(`📧 [EMAIL] Sending to ${mailOptions.to} via ${smtpHost}:${smtpPort} secure=${smtpSecure}`);
     try {
         const result = await Promise.race([
             transporter.sendMail(mailOptions),
@@ -35,7 +53,7 @@ async function sendMailWithTimeout(mailOptions, timeoutMs = 15000) {
         console.log('📨 Email sent. Message ID:', result.messageId);
         return true;
     } catch (err) {
-        console.error('❌ Email send failed:', err.message);
+        console.error('❌ Email send failed:', err.stack || err.message);
         return false;
     }
 }

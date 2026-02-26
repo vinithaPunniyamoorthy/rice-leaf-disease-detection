@@ -28,7 +28,8 @@ const hashToken = (token) => {
 let _cachedBaseUrl = null;
 const getBaseUrl = (req) => {
     if (_cachedBaseUrl) return _cachedBaseUrl;
-    const fromEnv = (process.env.BASE_URL || '').trim();
+    // allow explicit frontend verification URL or base url (Railway environment)
+    const fromEnv = (process.env.FRONTEND_VERIFY_URL || process.env.BASE_URL || '').trim();
     if (fromEnv) { _cachedBaseUrl = fromEnv.replace(/\/$/, ''); return _cachedBaseUrl; }
     // Auto-detect from request (works on Railway / any reverse proxy)
     if (req) {
@@ -97,10 +98,16 @@ exports.register = async (req, res) => {
                 if (admins.length > 0) adminEmail = admins[0].email;
             } catch (err) { console.error('Error fetching admin email:', err); }
 
-            // Fire-and-forget — don't block response on email
-            emailService.sendApprovalRequestToAdmin(adminEmail, { name, email, region }, approvalLink)
-                .then(ok => logToFile(`Admin approval email ${ok ? 'sent' : 'failed'}`))
-                .catch(err => logToFile(`Admin approval email error: ${err.message}`));
+            // ensure admin notification goes out before responding
+            const adminEmailOk = await emailService.sendApprovalRequestToAdmin(adminEmail, { name, email, region }, approvalLink)
+                .catch(err => { logToFile(`Admin approval email error: ${err.message}`); return false; });
+            logToFile(`Admin approval email ${adminEmailOk ? 'sent' : 'FAILED'}`);
+            if (!adminEmailOk) {
+                return res.status(500).json({
+                    message: 'Registration submitted but failed to notify admin. Please contact support.',
+                    success: false
+                });
+            }
 
             return res.status(201).json({
                 message: 'Registration submitted! Your account is pending admin approval. You will be notified via email once approved.',
@@ -108,10 +115,16 @@ exports.register = async (req, res) => {
             });
         } else {
             logToFile('Sending verification email to Farmer...');
-            // Fire-and-forget — don't block response on email
-            emailService.sendVerificationLink(email, link, name)
-                .then(ok => logToFile(`Verification email ${ok ? 'sent' : 'failed'} for ${email}`))
-                .catch(err => logToFile(`Verification email error: ${err.message}`));
+            // await the result so we know delivery succeeded before returning success
+            const emailOk = await emailService.sendVerificationLink(email, link, name);
+            logToFile(`Verification email ${emailOk ? 'sent' : 'FAILED'} for ${email}`);
+            if (!emailOk) {
+                // optionally clean up the inserted user? keep minimal: inform client of failure
+                return res.status(500).json({
+                    message: 'Registration failed: unable to send verification email. Please try again later.',
+                    success: false
+                });
+            }
 
             return res.status(201).json({
                 message: 'Registration successful! Please check your email to verify your account before logging in.',
